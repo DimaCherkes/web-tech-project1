@@ -1,6 +1,12 @@
 <?php
-require_once 'insert-functions.php';
+
 require_once(__DIR__ . '/../../config.php');
+require_once(__DIR__ . '/repository/athlete_medals_repo.php');
+require_once(__DIR__ . '/repository/athletes_repo.php');
+require_once(__DIR__ . '/repository/countries_repo.php');
+require_once(__DIR__ . '/repository/discipline_repo.php');
+require_once(__DIR__ . '/repository/medal_types_repo.php');
+require_once(__DIR__ . '/repository/olympic_games_repo.php');
 
 $data = []; // Definicia premennej pre ukladanie obsahu csv
 
