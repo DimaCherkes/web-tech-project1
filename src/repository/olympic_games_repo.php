@@ -1,6 +1,6 @@
 <?php
 
-require_once 'country_repo.php';
+require_once 'countries_repo.php';
 
 function findGameId(PDO $pdo, int $year, string $type, string $city): ?int {
     $sql = "SELECT id FROM olympic_games WHERE year = :year AND type = :type AND city = :city";

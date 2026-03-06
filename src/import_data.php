@@ -1,6 +1,6 @@
 <?php
 require_once 'insert-functions.php';
-require_once(__DIR__ . '/../config.php');
+require_once(__DIR__ . '/../../config.php');
 
 $data = []; // Definicia premennej pre ukladanie obsahu csv
 
@@ -42,7 +42,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['csv_file'])) {
                 $gameId = insertOlympicGames($pdo, (int)$row['oh_year'], $row['oh_type'], $row['oh_city'], $row['oh_country']);
                 
                 // 3. Ensure discipline exists
-                $disciplineId = insertDiscipline($pdo, $row['discipline']);
+                $disciplineName = $row['discipline'];
+                $disciplineCategory = null;
+                if (strpos($disciplineName, ' - ') !== false) {
+                    [$disciplineCategory, $disciplineName] = explode(' - ', $disciplineName, 2);
+                }
+                $disciplineId = insertDiscipline($pdo, trim($disciplineName), $disciplineCategory ? trim($disciplineCategory) : null);
                 
                 // 4. Ensure athlete exists
                 $athleteId = insertAthlete(

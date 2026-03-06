@@ -1,6 +1,6 @@
 <?php
 
-require_once 'country_repo.php';
+require_once 'countries_repo.php';
 
 function findAthleteId(PDO $pdo, string $firstName, string $lastName): ?int {
     $sql = "SELECT id FROM athletes WHERE first_name = :first_name AND last_name = :last_name";
