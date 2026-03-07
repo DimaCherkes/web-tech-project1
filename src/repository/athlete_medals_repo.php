@@ -3,6 +3,8 @@
  * Athlete Medals Repository
  */
 
+require_once 'medal_types_repo.php';
+
 function findAthleteMedal(PDO $pdo, int $athleteId, int $gameId, int $disciplineId): ?int {
     $sql = "SELECT id FROM athlete_medals 
             WHERE athlete_id = :athlete_id 
@@ -26,15 +28,15 @@ function insertAthleteMedal(PDO $pdo, int $athleteId, int $gameId, int $discipli
         return $existingId;
     }
 
-    // Map placing (1, 2, 3) to medal_type_id from medal_types table
-    $stmtMedal = $pdo->prepare("SELECT id FROM medal_types WHERE placing = :placing");
-    $stmtMedal->execute([':placing' => (int)$placing]);
-    $medalRow = $stmtMedal->fetch(PDO::FETCH_ASSOC);
-    $medalTypeId = $medalRow ? (int)$medalRow['id'] : null;
-
-    if (!$medalTypeId) {
-        return 0; // Not a medal-winning placement
+    $placingInt = (int)$placing;
+    
+    // Only process top 3 spots as medals
+    if ($placingInt < 1 || $placingInt > 3) {
+        return 0; 
     }
+
+    // Get medal type ID from separate repository
+    $medalTypeId = ensureMedalTypeExists($pdo, $placingInt);
 
     $sql = "INSERT INTO athlete_medals (athlete_id, olympic_games_id, discipline_id, medal_type_id) 
             VALUES (:athlete_id, :game_id, :discipline_id, :medal_type_id)";

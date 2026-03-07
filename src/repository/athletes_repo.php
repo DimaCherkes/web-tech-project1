@@ -26,8 +26,21 @@ function insertAthlete(
         return $existingId;
     }
 
-    $birthCountryId = $birthCountryName ? findCountryId($pdo, $birthCountryName) : null;
-    $deathCountryId = $deathCountryName ? findCountryId($pdo, $deathCountryName) : null;
+    $birthCountryId = null;
+    if ($birthCountryName) {
+        $birthCountryId = findCountryId($pdo, $birthCountryName);
+        if (!$birthCountryId) {
+            $birthCountryId = insertCountry($pdo, $birthCountryName);
+        }
+    }
+
+    $deathCountryId = null;
+    if ($deathCountryName) {
+        $deathCountryId = findCountryId($pdo, $deathCountryName);
+        if (!$deathCountryId) {
+            $deathCountryId = insertCountry($pdo, $deathCountryName);
+        }
+    }
 
     $sql = "INSERT INTO athletes
             (first_name, last_name, birth_date, birth_place, birth_country_id,
