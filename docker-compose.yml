@@ -16,6 +16,7 @@ services:
     container_name: dev_php
     volumes:
       - ./src:/var/www/html
+      - ../config.php:/var/www/config.php
     depends_on:
       - db
 
