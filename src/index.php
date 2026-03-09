@@ -40,6 +40,12 @@ if ($path === '/api/athletes') {
     exit;
 }
 
+if ($path === '/api/athletesList') {
+    $controller = new AthleteController();
+    $controller->athletesList();
+    exit;
+}
+
 // 404 Not Found
 http_response_code(404);
 echo json_encode(['error' => 'Not Found']);
