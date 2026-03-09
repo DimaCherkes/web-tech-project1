@@ -5,6 +5,7 @@ namespace App\Service;
 use App\Repository\AthleteRepository;
 use App\Dto\AthleteDTO;
 use App\Dto\AthleteListDTO;
+use App\Dto\AthleteDetailDTO;
 
 class AthleteService {
     private AthleteRepository $athleteRepository;
@@ -84,5 +85,16 @@ class AthleteService {
                 'totalPages' => ceil($totalItems / $pageSize)
             ]
         ];
+    }
+
+    public function getAthleteById(int $id): ?AthleteDetailDTO {
+        $athleteData = $this->athleteRepository->findById($id);
+        if (!$athleteData) {
+            return null;
+        }
+
+        $participations = $this->athleteRepository->findParticipationsByAthleteId($id);
+        
+        return new AthleteDetailDTO($athleteData, $participations);
     }
 }

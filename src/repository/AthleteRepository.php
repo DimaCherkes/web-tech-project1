@@ -213,4 +213,38 @@ class AthleteRepository {
         $stmt->execute($params);
         return (int) $stmt->fetchColumn();
     }
+
+    public function findById(int $id): ?array {
+        $sql = "SELECT a.*, c.name as birth_country_name, dc.name as death_country_name
+                FROM athletes a
+                LEFT JOIN countries c ON a.birth_country_id = c.id
+                LEFT JOIN countries dc ON a.death_country_id = dc.id
+                WHERE a.id = :id";
+        
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([':id' => $id]);
+        $row = $stmt->fetch();
+        return $row ?: null;
+    }
+
+    public function findParticipationsByAthleteId(int $athleteId): array {
+        $sql = "SELECT 
+                    og.year, 
+                    og.type, 
+                    og.city, 
+                    d.name as disciplineName, 
+                    d.category, 
+                    mt.name as medalName, 
+                    mt.placing
+                FROM athlete_medals am
+                JOIN olympic_games og ON am.olympic_games_id = og.id
+                JOIN disciplines d ON am.discipline_id = d.id
+                JOIN medal_types mt ON am.medal_type_id = mt.id
+                WHERE am.athlete_id = :athlete_id
+                ORDER BY og.year DESC";
+        
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([':athlete_id' => $athleteId]);
+        return $stmt->fetchAll();
+    }
 }

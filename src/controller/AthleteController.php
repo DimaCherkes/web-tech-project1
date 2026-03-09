@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Service\AthleteService;
 use App\Dto\AthleteDTO;
 use App\Dto\AthleteListDTO;
+use App\Dto\AthleteDetailDTO;
 use App\Core\Logger;
 
 class AthleteController
@@ -75,6 +76,36 @@ class AthleteController
 
             http_response_code(500);
             echo json_encode(['error' => 'Internal Server Error', 'message' => $e->getMessage()]);
+        }
+    }
+
+    /**
+     * GET /api/athlete?id=...
+     */
+    public function getAthlete(): void
+    {
+        header('Content-Type: application/json; charset=utf-8');
+
+        $id = (int)($_GET['id'] ?? 0);
+        if ($id <= 0) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Invalid ID']);
+            return;
+        }
+
+        try {
+            $athlete = $this->athleteService->getAthleteById($id);
+            if (!$athlete) {
+                http_response_code(404);
+                echo json_encode(['error' => 'Athlete not found']);
+                return;
+            }
+
+            echo json_encode(['data' => $athlete->toArray()], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+        } catch (\Throwable $e) {
+            Logger::error("Error in AthleteController::getAthlete", $e);
+            http_response_code(500);
+            echo json_encode(['error' => 'Internal Server Error']);
         }
     }
 }

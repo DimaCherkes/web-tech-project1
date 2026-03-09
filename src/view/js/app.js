@@ -111,6 +111,8 @@ document.addEventListener('DOMContentLoaded', () => {
         athletesBody.innerHTML = '';
         athletes.forEach(a => {
             const row = document.createElement('tr');
+            row.style.cursor = 'pointer';
+            row.onclick = () => window.location.href = `/athlete?id=${a.id}`;
             row.innerHTML = `
                 <td>${a.id}</td>
                 <td>${a.firstName}</td>

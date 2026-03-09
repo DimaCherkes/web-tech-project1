@@ -41,6 +41,11 @@ if ($path === '/' || $path === '/index.php') {
     exit;
 }
 
+if ($path === '/athlete' || $path === '/athlete.php') {
+    require __DIR__ . '/view/athlete.php';
+    exit;
+}
+
 // Serve static files
 if (preg_match('/\.(?:css|js)$/', $path)) {
     $file = __DIR__ . $path;
@@ -61,6 +66,12 @@ if ($path === '/api/athletes') {
 if ($path === '/api/athletesList') {
     $controller = new AthleteController();
     $controller->athletesList();
+    exit;
+}
+
+if ($path === '/api/athlete') {
+    $controller = new AthleteController();
+    $controller->getAthlete();
     exit;
 }
 
