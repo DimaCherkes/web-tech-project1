@@ -28,12 +28,30 @@ spl_autoload_register(function ($class) {
 });
 
 use App\Controller\AthleteController;
+use App\Controller\GameController;
+use App\Controller\DisciplineController;
 
 // Simple Router
 $requestUri = $_SERVER['REQUEST_URI'];
 $path = parse_url($requestUri, PHP_URL_PATH);
 
 // Simple path matching
+if ($path === '/' || $path === '/index.php') {
+    require __DIR__ . '/view/index.php';
+    exit;
+}
+
+// Serve static files
+if (preg_match('/\.(?:css|js)$/', $path)) {
+    $file = __DIR__ . $path;
+    if (file_exists($file)) {
+        $mime = str_ends_with($path, '.css') ? 'text/css' : 'application/javascript';
+        header("Content-Type: $mime");
+        readfile($file);
+        exit;
+    }
+}
+
 if ($path === '/api/athletes') {
     $controller = new AthleteController();
     $controller->index();
@@ -43,6 +61,18 @@ if ($path === '/api/athletes') {
 if ($path === '/api/athletesList') {
     $controller = new AthleteController();
     $controller->athletesList();
+    exit;
+}
+
+if ($path === '/api/years') {
+    $controller = new GameController();
+    $controller->years();
+    exit;
+}
+
+if ($path === '/api/categories') {
+    $controller = new DisciplineController();
+    $controller->categories();
     exit;
 }
 
