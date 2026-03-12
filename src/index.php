@@ -16,7 +16,6 @@ spl_autoload_register(function ($class) {
 
     // Since our folders are lowercase in the file system but CamelCase in the namespace
     // we need to handle mapping correctly. 
-    // Example: App\Controller\AthleteController -> src/controller/AthleteController.php
     $parts = explode('\\', $relative_class);
     $fileName = array_pop($parts);
     $folderPath = strtolower(implode('/', $parts));
@@ -30,6 +29,7 @@ spl_autoload_register(function ($class) {
 use App\Controller\AthleteController;
 use App\Controller\GameController;
 use App\Controller\DisciplineController;
+use App\Controller\UserController;
 
 // Simple Router
 $requestUri = $_SERVER['REQUEST_URI'];
@@ -45,12 +45,9 @@ if ($path === '/' || $path === '/index.php') {
     exit;
 }
 
-if ($path === '/register' || $path === '/register.php') {
-    if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
-        http_response_code(405);
-        exit;
-    }
-    require __DIR__ . '/view/register.php';
+if ($path === '/register') {
+    $controller = new UserController();
+    $controller->register();
     exit;
 }
 
@@ -78,6 +75,7 @@ if (preg_match('/\.(?:css|js)$/', $path)) {
     }
 }
 
+// API Routes
 if ($path === '/api/athletes' && $_SERVER['REQUEST_METHOD'] === 'GET') {
     $controller = new AthleteController();
     $controller->index();

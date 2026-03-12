@@ -1,72 +1,9 @@
-<?php
-
-require_once __DIR__ . '/../../config.php';
-require_once __DIR__ . '/utils.php';  // Externy subor s funkciami isEmpty, userExist a pod...
-
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    // Ak bol odoslany formular - tzn. bol urobeny HTTP POST Request na tento skript...
-
-    // Validacia zadania e-mailu
-    if (isEmpty($_POST['email']) === true) {
-        $errors .= "Nevyplnený e-mail.\n";
-    }
-
-    // TODO: validacia, zi pouzivatel zadal e-mail v korektnom formate
-
-    // Validacia, ci pouzivatel v DB existuje - kontrolujeme stlpec e-mail, ktory sme si zadali ako UNIQUE.
-    if (userExist($pdo, $_POST['email']) === true) {
-        $errors .= "Používateľ s týmto e-mailom už existuje.\n";
-        die();
-    }
-
-    // Valiadacia zadania mena a priezviska
-    if (isEmpty($_POST['firstname']) === true) {
-        $errors .= "Nevyplnené meno.\n";
-    } elseif (isEmpty($_POST['lastname']) === true) {
-        $errors .= "Nevyplnené priezvisko.\n";
-    }
-
-    // TODO: Implementujte validaciu dlzky mena a priezviska na zaklade dlzky, ktoru ste definovali pre stlpce v DB
-    // TODO: Implementujte validaciu, ci meno a priezvisko obsahuje iba povolene znaky
-
-
-    // Validacia hesla
-    if (isEmpty($_POST['password']) === true) {
-        $errors .= "Nevyplnené heslo.\n";
-    }
-
-    // TODO: Implementujte validaciu kontroly opakovane zadaneho hesla - kontrola, ci $_POST['password'] a $_POST['password_repeat'] su rovnake retazce.
-    // TODO: Osetrite a validujte vstupy pouzivatela
-
-    if (empty($errors)) {
-        $stmt = $pdo->prepare("INSERT INTO users (first_name, last_name, email, password_hash) VALUES (:first_name, :last_name, :email, :password_hash)");
-
-        $pw_hash = password_hash($_POST['password'], PASSWORD_ARGON2ID);
-
-        $stmt->bindParam(":first_name", $_POST['first_name'], PDO::PARAM_STR);
-        $stmt->bindParam(":last_name", $_POST['last_name'], PDO::PARAM_STR);
-        $stmt->bindParam(":email", $email, PDO::PARAM_STR);
-        $stmt->bindParam(":password_hash", $pw_hash, PDO::PARAM_STR);
-
-        if ($stmt->execute()) {
-            $reg_status = "Registracia prebehla uspesne.";
-        } else {
-            $reg_status = "Chyba pri registracii.";
-        }
-
-        unset($stmt);
-    }
-    unset($pdo);
-}
-
-?>
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Olympics Athletes</title>
+    <title>Register - Olympics Athletes</title>
     <link rel="stylesheet" href="/view/css/style.css">
 </head>
 <body>
@@ -74,7 +11,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <nav>
         <ul>
             <li><a href="/">Home</a></li>
-            <li><a href="/about">About</a></li>
+            <li><a href="/register">Register</a></li>
         </ul>
     </nav>
 </header>
@@ -82,39 +19,52 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 <main>
     <h1>Register form</h1>
 
-    <form method="post">
-        <label for="firstname">
-            Meno:
-            <input type="text" name="firs_tname" value="" id="firstname" placeholder="napr. John">
-        </label>
+    <?php if ($success): ?>
+        <div class="success-message">
+            <p>Registration successful! You can now log in.</p>
+        </div>
+    <?php endif; ?>
 
-        <label for="lastname">
-            Priezvisko:
-            <input type="text" name="las_tname" value="" id="lastname" placeholder="napr. Doe">
-        </label>
+    <?php if (!empty($errors)): ?>
+        <div class="error-messages">
+            <ul>
+                <?php foreach ($errors as $error): ?>
+                    <li class="error"><?php echo htmlspecialchars($error); ?></li>
+                <?php endforeach; ?>
+            </ul>
+        </div>
+    <?php endif; ?>
 
-        <br>
+    <form method="post" action="/register" class="register-form">
+        <div class="form-group">
+            <label for="firstName">First Name:</label>
+            <input type="text" name="firstName" id="firstName" placeholder="e.g. John" value="<?php echo htmlspecialchars($_POST['firstName'] ?? ''); ?>">
+        </div>
 
-        <label for="email">
-            E-mail:
-            <input type="email" name="email" value="" id="email" placeholder="napr. johndoe@example.com">
-        </label>
+        <div class="form-group">
+            <label for="lastName">Last Name:</label>
+            <input type="text" name="lastName" id="lastName" placeholder="e.g. Doe" value="<?php echo htmlspecialchars($_POST['lastName'] ?? ''); ?>">
+        </div>
 
-        <label for="password">
-            Heslo:
-            <input type="password" name="password" value="" id="password">
-        </label>
-        <label for="password_repeat">
-            Heslo znova:
-            <input type="password" name="password_repeat" value="" id="password_repeat">
-        </label>
+        <div class="form-group">
+            <label for="email">E-mail:</label>
+            <input type="email" name="email" id="email" placeholder="e.g. johndoe@example.com" value="<?php echo htmlspecialchars($_POST['email'] ?? ''); ?>">
+        </div>
 
-        <button type="submit">Vytvoriť konto</button>
+        <div class="form-group">
+            <label for="password">Password:</label>
+            <input type="password" name="password" id="password">
+        </div>
+
+        <div class="form-group">
+            <label for="password_repeat">Repeat Password:</label>
+            <input type="password" name="password_repeat" id="password_repeat">
+        </div>
+
+        <button type="submit">Create account</button>
     </form>
 
 </main>
-
-<!--<script src="/view/js/app.js"></script>-->
 
 </body>
 </html>
