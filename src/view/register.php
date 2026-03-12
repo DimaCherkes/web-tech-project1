@@ -21,7 +21,13 @@
 
     <?php if ($success): ?>
         <div class="success-message">
-            <p>Registration successful! You can now log in.</p>
+            <p>Registration successful! Please set up Two-Factor Authentication.</p>
+            <div class="tfa-setup" style="text-align: center; margin: 20px 0; padding: 20px; border: 1px solid #ddd; background: #fff; border-radius: 8px;">
+                <p>Scan this QR code with your authenticator app (e.g., Google Authenticator):</p>
+                <img src="<?php echo $qrCode; ?>" alt="2FA QR Code" style="margin: 15px 0;">
+                <p>Or enter this code manually: <strong><?php echo $tfaSecret; ?></strong></p>
+                <p style="margin-top: 15px;"><a href="/login" class="button">Go to Login</a></p>
+            </div>
         </div>
     <?php endif; ?>
 

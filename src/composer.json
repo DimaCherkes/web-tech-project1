@@ -1,0 +1,15 @@
+{
+    "require": {
+        "robthree/twofactorauth": "^3.0",
+        "bacon/bacon-qr-code": "^2",
+        "google/apiclient": "^2.19"
+    },
+    "scripts": {
+        "pre-autoload-dump": "Google\\Task\\Composer::cleanup"
+    },
+    "extra": {
+        "google/apiclient-services": [
+            "Oauth2"
+        ]
+    }
+}

@@ -3,14 +3,18 @@
 namespace App\Service;
 
 use App\Repository\UserRepository;
+use RobThree\Auth\TwoFactorAuth;
+use RobThree\Auth\Providers\Qr\BaconQrCodeProvider;
 
 class UserService
 {
     private UserRepository $userRepository;
+    private TwoFactorAuth $tfa;
 
     public function __construct()
     {
         $this->userRepository = new UserRepository();
+        $this->tfa = new TwoFactorAuth(new BaconQrCodeProvider(4, '#ffffff', '#000000', 'svg'));
     }
 
     public function register(array $data): array
@@ -21,21 +25,43 @@ class UserService
             return ['success' => false, 'errors' => $errors];
         }
 
+        // Generate 2FA Secret
+        $tfaSecret = $this->tfa->createSecret();
+        $data['tfaSecret'] = $tfaSecret;
+
         $success = $this->userRepository->create($data);
         
         if (!$success) {
             return ['success' => false, 'errors' => ['General error occurred during registration.']];
         }
 
-        return ['success' => true];
+        // Generate QR Code for the view
+        $qrCode = $this->tfa->getQRCodeImageAsDataUri('Olympic Games APP', $tfaSecret);
+
+        return [
+            'success' => true, 
+            'tfaSecret' => $tfaSecret, 
+            'qrCode' => $qrCode
+        ];
     }
 
-    public function authenticate(string $email, string $password): array
+    public function authenticate(string $email, string $password, ?string $tfaCode = null): array
     {
         $user = $this->userRepository->findByEmail($email);
 
         if (!$user || !password_verify($password, $user['password_hash'])) {
             return ['success' => false, 'error' => 'Incorrect email or password.'];
+        }
+
+        // Check if 2FA is required (user has a secret)
+        if (!empty($user['tfa_secret'])) {
+            if ($tfaCode === null) {
+                return ['success' => true, 'requires2FA' => true];
+            }
+            
+            if (!$this->tfa->verifyCode($user['tfa_secret'], $tfaCode)) {
+                return ['success' => false, 'error' => 'Invalid 2FA code.'];
+            }
         }
 
         return [

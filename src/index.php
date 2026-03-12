@@ -2,6 +2,8 @@
 
 session_start();
 
+require_once __DIR__ . '/vendor/autoload.php';
+
 // Basic Autoloader (Manual since we are not using Composer)
 spl_autoload_register(function ($class) {
     // Map App\ namespace to src/ directory

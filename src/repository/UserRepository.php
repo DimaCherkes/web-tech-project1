@@ -23,15 +23,17 @@ class UserRepository
 
     public function create(array $data): bool
     {
-        $sql = "INSERT INTO user_accounts (first_name, last_name, email, password_hash) 
-                VALUES (:first_name, :last_name, :email, :password_hash)";
-        
+        $sql = "INSERT INTO user_accounts (first_name, last_name, email, password_hash, tfa_secret) 
+                VALUES (:first_name, :last_name, :email, :password_hash, :tfa_secret)";
+
         $stmt = $this->db->prepare($sql);
         return $stmt->execute([
             ':first_name' => $data['firstName'],
             ':last_name' => $data['lastName'],
             ':email' => $data['email'],
-            ':password_hash' => password_hash($data['password'], PASSWORD_ARGON2ID)
+            ':password_hash' => password_hash($data['password'], PASSWORD_ARGON2ID),
+            ':tfa_secret' => $data['tfaSecret'] ?? null
         ]);
     }
-}
+    }
+
