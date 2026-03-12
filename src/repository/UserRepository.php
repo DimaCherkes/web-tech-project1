@@ -21,6 +21,28 @@ class UserRepository
         return $stmt->fetch() ?: null;
     }
 
+    public function syncGoogleUser(array $data): int
+    {
+        $userByEmail = $this->findByEmail($data['email']);
+        
+        if ($userByEmail) {
+            return (int)$userByEmail['id'];
+        }
+
+        // Create new user if not exists
+        $sql = "INSERT INTO user_accounts (first_name, last_name, email) 
+                VALUES (:first_name, :last_name, :email)";
+        
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([
+            ':first_name' => $data['firstName'],
+            ':last_name' => $data['lastName'],
+            ':email' => $data['email']
+        ]);
+
+        return (int)$this->db->lastInsertId();
+    }
+
     public function create(array $data): bool
     {
         $sql = "INSERT INTO user_accounts (first_name, last_name, email, password_hash, tfa_secret) 

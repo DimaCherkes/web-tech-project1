@@ -17,6 +17,7 @@ services:
     volumes:
       - ./src:/var/www/html
       - ../config.php:/var/www/config.php
+      - ../client_secret_webte.json:/var/www/client_secret_webte.json
     depends_on:
       - db
 

@@ -12,9 +12,14 @@
             <ul>
                 <li><a href="/">Home</a></li>
                 <?php if (isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true): ?>
-                    <li><span>Welcome, <?php echo htmlspecialchars($_SESSION['fullName']); ?></span></li>
+                    <li>
+                        <span style="margin-right: 15px;">
+                            Welcome, <?php echo htmlspecialchars($_SESSION['fullName']); ?> 
+                            (<?php echo (isset($_SESSION['authSource']) && $_SESSION['authSource'] === 'google') ? 'Google Login' : 'Local Login'; ?>)
+                        </span>
+                    </li>
                     <li><a href="/logout">Logout</a></li>
-                <?php else: ?>
+<?php else: ?>
                     <li><a href="/login">Login</a></li>
                     <li><a href="/register">Register</a></li>
                 <?php endif; ?>

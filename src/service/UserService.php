@@ -5,16 +5,74 @@ namespace App\Service;
 use App\Repository\UserRepository;
 use RobThree\Auth\TwoFactorAuth;
 use RobThree\Auth\Providers\Qr\BaconQrCodeProvider;
+use Google\Client;
+use Google\Service\Oauth2;
 
 class UserService
 {
     private UserRepository $userRepository;
     private TwoFactorAuth $tfa;
+    private Client $googleClient;
 
     public function __construct()
     {
         $this->userRepository = new UserRepository();
         $this->tfa = new TwoFactorAuth(new BaconQrCodeProvider(4, '#ffffff', '#000000', 'svg'));
+        
+        // Setup Google Client
+        $this->googleClient = new Client();
+        $this->googleClient->setAuthConfig(__DIR__ . '/../../client_secret_webte.json');
+        $this->googleClient->setRedirectUri($this->getRedirectUri());
+        $this->googleClient->addScope(["email", "profile"]);
+        $this->googleClient->setAccessType("offline");
+        $this->googleClient->setIncludeGrantedScopes(true);
+    }
+
+    private function getRedirectUri(): string
+    {
+        $host = $_SERVER['HTTP_HOST'];
+        return "https://$host/project1/oauth2callback.php";
+    }
+
+    public function getGoogleAuthUrl(): string
+    {
+        $state = bin2hex(random_bytes(16));
+        $_SESSION['google_state'] = $state;
+        $this->googleClient->setState($state);
+        return $this->googleClient->createAuthUrl();
+    }
+
+    public function authenticateGoogle(string $code, string $state): array
+    {
+        if (!isset($_SESSION['google_state']) || $state !== $_SESSION['google_state']) {
+            return ['success' => false, 'error' => 'State mismatch. CSRF protection failed.'];
+        }
+
+        $token = $this->googleClient->fetchAccessTokenWithAuthCode($code);
+        if (isset($token['error'])) {
+            return ['success' => false, 'error' => $token['error_description']];
+        }
+
+        $this->googleClient->setAccessToken($token);
+        $oauth = new Oauth2($this->googleClient);
+        $userInfo = $oauth->userinfo->get();
+
+        $userId = $this->userRepository->syncGoogleUser([
+            'google_id' => $userInfo->id,
+            'email' => $userInfo->email,
+            'firstName' => $userInfo->givenName,
+            'lastName' => $userInfo->familyName
+        ]);
+
+        return [
+            'success' => true,
+            'user' => [
+                'id' => $userId,
+                'fullName' => $userInfo->name,
+                'email' => $userInfo->email,
+                'gid' => $userInfo->id
+            ]
+        ];
     }
 
     public function register(array $data): array

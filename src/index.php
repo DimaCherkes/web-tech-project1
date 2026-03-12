@@ -67,6 +67,18 @@ if ($path === '/logout') {
     exit;
 }
 
+if ($path === '/auth/google') {
+    $controller = new UserController();
+    $controller->googleLogin();
+    exit;
+}
+
+if ($path === '/project1/oauth2callback.php') {
+    $controller = new UserController();
+    $controller->googleCallback();
+    exit;
+}
+
 if ($path === '/athlete' || $path === '/athlete.php') {
     if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
         http_response_code(405);

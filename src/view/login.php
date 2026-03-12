@@ -19,7 +19,12 @@
 <main>
     <h1>Login</h1>
 
-    <?php if (!empty($errors)): ?>
+    <?php 
+    $get_error = $_GET['error'] ?? null;
+    if ($get_error) $errors[] = $get_error;
+    
+    if (!empty($errors)): 
+    ?>
         <div class="error-messages">
             <ul>
                 <?php foreach ($errors as $error): ?>
@@ -30,11 +35,9 @@
     <?php endif; ?>
 
     <form method="post" action="/login" class="register-form">
+        <!-- ... existing form fields ... -->
         <?php if ($requires2FA): ?>
-            <div class="success-message">
-                <p>Please enter the 6-digit code from your authenticator app.</p>
-            </div>
-            
+            <!-- ... 2FA fields ... -->
             <input type="hidden" name="email" value="<?php echo htmlspecialchars($_POST['email'] ?? ''); ?>">
             <input type="hidden" name="password" value="<?php echo htmlspecialchars($_POST['password'] ?? ''); ?>">
             
@@ -56,6 +59,12 @@
             </div>
 
             <button type="submit">Log In</button>
+            
+            <div style="margin-top: 20px; text-align: center; border-top: 1px solid #eee; padding-top: 20px;">
+                <a href="/auth/google" class="google-btn" style="display: inline-block; background: #4285F4; color: white; padding: 10px 20px; border-radius: 4px; text-decoration: none; font-weight: bold;">
+                    Sign in with Google
+                </a>
+            </div>
         <?php endif; ?>
     </form>
 

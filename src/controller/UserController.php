@@ -2,8 +2,8 @@
 
 namespace App\Controller;
 
-use App\Service\UserService;
 use App\Core\Logger;
+use App\Service\UserService;
 
 class UserController
 {
@@ -23,7 +23,7 @@ class UserController
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             Logger::info("User registration attempt for email: " . ($_POST['email'] ?? 'unknown'));
-            
+
             $data = [
                 'firstName' => $_POST['firstName'] ?? '',
                 'lastName' => $_POST['lastName'] ?? '',
@@ -33,7 +33,7 @@ class UserController
             ];
 
             $result = $this->userService->register($data);
-            
+
             if ($result['success']) {
                 $success = true;
                 $qrCode = $result['qrCode'];
@@ -89,6 +89,46 @@ class UserController
     {
         $_SESSION = [];
         session_destroy();
+        header("location: /login");
+        exit;
+    }
+
+    public function googleLogin(): void
+    {
+        $authUrl = $this->userService->getGoogleAuthUrl();
+        header("location: " . filter_var($authUrl, FILTER_SANITIZE_URL));
+        exit;
+    }
+
+    public function googleCallback(): void
+    {
+        $code = $_GET['code'] ?? null;
+        $state = $_GET['state'] ?? null;
+        $error = $_GET['error'] ?? null;
+
+        if ($error) {
+            header("location: /login?error=" . urlencode($error));
+            exit;
+        }
+
+        if ($code && $state) {
+            $result = $this->userService->authenticateGoogle($code, $state);
+
+            if ($result['success']) {
+                $_SESSION['loggedin'] = true;
+                $_SESSION['userId'] = $result['user']['id'];
+                $_SESSION['fullName'] = $result['user']['fullName'];
+                $_SESSION['email'] = $result['user']['email'];
+                $_SESSION['authSource'] = 'google';
+
+                header("location: /");
+                exit;
+            } else {
+                header("location: /login?error=" . urlencode($result['error']));
+                exit;
+            }
+        }
+
         header("location: /login");
         exit;
     }
