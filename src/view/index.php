@@ -18,6 +18,7 @@
                             (<?php echo (isset($_SESSION['authSource']) && $_SESSION['authSource'] === 'google') ? 'Google Login' : 'Local Login'; ?>)
                         </span>
                     </li>
+                    <li><a href="/project1/history">My History</a></li>
                     <li><a href="/project1/logout">Logout</a></li>
                 <?php else: ?>
                     <li><a href="/project1/login">Login</a></li>

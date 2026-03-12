@@ -75,6 +75,12 @@ if ($path === '/login') {
     exit;
 }
 
+if ($path === '/history') {
+    $controller = new UserController();
+    $controller->history();
+    exit;
+}
+
 if ($path === '/logout') {
     $controller = new UserController();
     $controller->logout();

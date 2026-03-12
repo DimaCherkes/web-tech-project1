@@ -3,6 +3,7 @@
 namespace App\Service;
 
 use App\Repository\UserRepository;
+use App\Repository\LoginHistoryRepository;
 use RobThree\Auth\TwoFactorAuth;
 use RobThree\Auth\Providers\Qr\BaconQrCodeProvider;
 use Google\Client;
@@ -11,17 +12,20 @@ use Google\Service\Oauth2;
 class UserService
 {
     private UserRepository $userRepository;
+    private LoginHistoryRepository $loginHistoryRepository;
     private TwoFactorAuth $tfa;
     private Client $googleClient;
 
     public function __construct()
     {
         $this->userRepository = new UserRepository();
+        $this->loginHistoryRepository = new LoginHistoryRepository();
         $this->tfa = new TwoFactorAuth(new BaconQrCodeProvider(4, '#ffffff', '#000000', 'svg'));
         
         // Setup Google Client
         $this->googleClient = new Client();
-        $this->googleClient->setAuthConfig(__DIR__ . '/../../../client_secret_webte.json');
+        // Adjust path if needed. Assuming it's in the same folder as index.php
+        $this->googleClient->setAuthConfig(__DIR__ . '/../client_secret_webte.json');
         $this->googleClient->setRedirectUri($this->getRedirectUri());
         $this->googleClient->addScope(["email", "profile"]);
         $this->googleClient->setAccessType("offline");
@@ -58,11 +62,13 @@ class UserService
         $userInfo = $oauth->userinfo->get();
 
         $userId = $this->userRepository->syncGoogleUser([
-            'google_id' => $userInfo->id,
             'email' => $userInfo->email,
             'firstName' => $userInfo->givenName ?? $userInfo->name ?? 'Google User',
             'lastName' => $userInfo->familyName ?? ''
         ]);
+
+        // Record Login History
+        $this->loginHistoryRepository->record($userId, 'OAUTH');
 
         return [
             'success' => true,
@@ -70,7 +76,7 @@ class UserService
                 'id' => $userId,
                 'fullName' => $userInfo->name,
                 'email' => $userInfo->email,
-                'gid' => $userInfo->id
+                'authSource' => 'google'
             ]
         ];
     }
@@ -122,14 +128,23 @@ class UserService
             }
         }
 
+        // Record Login History
+        $this->loginHistoryRepository->record((int)$user['id'], 'LOCAL');
+
         return [
             'success' => true,
             'user' => [
                 'id' => $user['id'],
                 'fullName' => $user['first_name'] . ' ' . $user['last_name'],
-                'email' => $user['email']
+                'email' => $user['email'],
+                'authSource' => 'local'
             ]
         ];
+    }
+
+    public function getUserLoginHistory(int $userId): array
+    {
+        return $this->loginHistoryRepository->findByUserId($userId);
     }
 
     private function validateRegistration(array $data): array

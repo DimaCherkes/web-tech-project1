@@ -133,4 +133,17 @@ class UserController
         header("location: /project1/login");
         exit;
     }
+
+    public function history(): void
+    {
+        if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
+            header("location: /project1/login");
+            exit;
+        }
+
+        $userId = (int)$_SESSION['userId'];
+        $history = $this->userService->getUserLoginHistory($userId);
+
+        require __DIR__ . '/../view/history.php';
+    }
 }
