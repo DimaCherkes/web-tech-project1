@@ -61,8 +61,8 @@ document.addEventListener('DOMContentLoaded', () => {
     async function loadFilters() {
         try {
             const [categoriesRes, yearsRes] = await Promise.all([
-                fetch('/api/categories'),
-                fetch('/api/years')
+                fetch('/project1/api/categories'),
+                fetch('/project1/api/years')
             ]);
             
             const categoriesData = await categoriesRes.json();
@@ -97,7 +97,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 year: currentYear
             });
 
-            const res = await fetch(`/api/athletesList?${params.toString()}`);
+            const res = await fetch(`/project1/api/athletesList?${params.toString()}`);
             const result = await res.json();
 
             renderTable(result.data);
@@ -112,7 +112,7 @@ document.addEventListener('DOMContentLoaded', () => {
         athletes.forEach(a => {
             const row = document.createElement('tr');
             row.style.cursor = 'pointer';
-            row.onclick = () => window.location.href = `/athlete?id=${a.id}`;
+            row.onclick = () => window.location.href = `/project1/athlete?id=${a.id}`;
             row.innerHTML = `
                 <td>${a.id}</td>
                 <td>${a.firstName}</td>

@@ -4,14 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - Olympics Athletes</title>
-    <link rel="stylesheet" href="/view/css/style.css">
+    <link rel="stylesheet" href="/project1/view/css/style.css">
 </head>
 <body>
 <header>
     <nav>
         <ul>
-            <li><a href="/">Home</a></li>
-            <li><a href="/register">Register</a></li>
+            <li><a href="/project1/">Home</a></li>
+            <li><a href="/project1/register">Register</a></li>
         </ul>
     </nav>
 </header>
@@ -34,10 +34,12 @@
         </div>
     <?php endif; ?>
 
-    <form method="post" action="/login" class="register-form">
-        <!-- ... existing form fields ... -->
+    <form method="post" action="/project1/login" class="register-form">
         <?php if ($requires2FA): ?>
-            <!-- ... 2FA fields ... -->
+            <div class="success-message">
+                <p>Please enter the 6-digit code from your authenticator app.</p>
+            </div>
+            
             <input type="hidden" name="email" value="<?php echo htmlspecialchars($_POST['email'] ?? ''); ?>">
             <input type="hidden" name="password" value="<?php echo htmlspecialchars($_POST['password'] ?? ''); ?>">
             
@@ -61,7 +63,7 @@
             <button type="submit">Log In</button>
             
             <div style="margin-top: 20px; text-align: center; border-top: 1px solid #eee; padding-top: 20px;">
-                <a href="/auth/google" class="google-btn" style="display: inline-block; background: #4285F4; color: white; padding: 10px 20px; border-radius: 4px; text-decoration: none; font-weight: bold;">
+                <a href="/project1/auth/google" class="google-btn" style="display: inline-block; background: #4285F4; color: white; padding: 10px 20px; border-radius: 4px; text-decoration: none; font-weight: bold;">
                     Sign in with Google
                 </a>
             </div>
@@ -69,7 +71,7 @@
     </form>
 
     <p style="text-align: center; margin-top: 20px;">
-        Don't have an account? <a href="/register">Register here.</a>
+        Don't have an account? <a href="/project1/register">Register here.</a>
     </p>
 
 </main>

@@ -37,7 +37,21 @@ use App\Controller\UserController;
 
 // Simple Router
 $requestUri = $_SERVER['REQUEST_URI'];
+$scriptName = $_SERVER['SCRIPT_NAME']; // e.g., /project1/index.php
+$basePath = dirname($scriptName);      // e.g., /project1
+
 $path = parse_url($requestUri, PHP_URL_PATH);
+
+// Remove base path from the URL path for routing
+if ($basePath !== '/' && $basePath !== '\\' && strpos($path, $basePath) === 0) {
+    $path = substr($path, strlen($basePath));
+}
+
+// Normalize path: ensure it starts with / and has no trailing slash (except for root)
+$path = '/' . ltrim($path, '/');
+if ($path !== '/') {
+    $path = rtrim($path, '/');
+}
 
 // Simple path matching
 if ($path === '/' || $path === '/index.php') {

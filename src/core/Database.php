@@ -10,7 +10,7 @@ class Database {
 
     public static function getConnection(): PDO {
         if (self::$instance === null) {
-            $configPath = __DIR__ . '/../../config.php';
+            $configPath = __DIR__ . '/../../../config.php';
             
             if (!file_exists($configPath)) {
                 http_response_code(500);

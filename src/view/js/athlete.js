@@ -15,7 +15,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function loadAthleteDetails(id) {
         try {
-            const res = await fetch(`/api/athlete?id=${id}`);
+            const res = await fetch(`/project1/api/athlete?id=${id}`);
             if (!res.ok) throw new Error('Athlete not found');
             
             const result = await res.json();

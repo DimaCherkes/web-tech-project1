@@ -2,8 +2,8 @@
 
 namespace App\Controller;
 
-use App\Core\Logger;
 use App\Service\UserService;
+use App\Core\Logger;
 
 class UserController
 {
@@ -23,7 +23,7 @@ class UserController
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             Logger::info("User registration attempt for email: " . ($_POST['email'] ?? 'unknown'));
-
+            
             $data = [
                 'firstName' => $_POST['firstName'] ?? '',
                 'lastName' => $_POST['lastName'] ?? '',
@@ -50,7 +50,7 @@ class UserController
     public function login(): void
     {
         if (isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true) {
-            header("location: /");
+            header("location: /project1/");
             exit;
         }
 
@@ -72,9 +72,10 @@ class UserController
                     $_SESSION['userId'] = $result['user']['id'];
                     $_SESSION['fullName'] = $result['user']['fullName'];
                     $_SESSION['email'] = $result['user']['email'];
+                    $_SESSION['authSource'] = 'local';
 
                     Logger::info("User logged in: " . $email);
-                    header("location: /");
+                    header("location: /project1/");
                     exit;
                 }
             } else {
@@ -89,7 +90,7 @@ class UserController
     {
         $_SESSION = [];
         session_destroy();
-        header("location: /login");
+        header("location: /project1/login");
         exit;
     }
 
@@ -107,7 +108,7 @@ class UserController
         $error = $_GET['error'] ?? null;
 
         if ($error) {
-            header("location: /login?error=" . urlencode($error));
+            header("location: /project1/login?error=" . urlencode($error));
             exit;
         }
 
@@ -121,15 +122,15 @@ class UserController
                 $_SESSION['email'] = $result['user']['email'];
                 $_SESSION['authSource'] = 'google';
 
-                header("location: /");
+                header("location: /project1/");
                 exit;
             } else {
-                header("location: /login?error=" . urlencode($result['error']));
+                header("location: /project1/login?error=" . urlencode($result['error']));
                 exit;
             }
         }
 
-        header("location: /login");
+        header("location: /project1/login");
         exit;
     }
 }

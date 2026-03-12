@@ -1,17 +1,16 @@
 <!DOCTYPE html>
-<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Register - Olympics Athletes</title>
-    <link rel="stylesheet" href="/view/css/style.css">
+    <link rel="stylesheet" href="/project1/view/css/style.css">
 </head>
 <body>
 <header>
     <nav>
         <ul>
-            <li><a href="/">Home</a></li>
-            <li><a href="/register">Register</a></li>
+            <li><a href="/project1/">Home</a></li>
+            <li><a href="/project1/register">Register</a></li>
         </ul>
     </nav>
 </header>
@@ -26,15 +25,17 @@
                 <p>Scan this QR code with your authenticator app (e.g., Google Authenticator):</p>
                 <img src="<?php echo $qrCode; ?>" alt="2FA QR Code" style="margin: 15px 0;">
                 <p>Or enter this code manually: <strong><?php echo $tfaSecret; ?></strong></p>
-                <p style="margin-top: 15px;"><a href="/login" class="button">Go to Login</a></p>
+                <p style="margin-top: 15px;"><a href="/project1/login" class="button">Go to Login</a></p>
             </div>
         </div>
     <?php endif; ?>
 
     <?php if (!empty($errors)): ?>
-        <div class="error-messages">
-            <ul>
-                <?php foreach ($errors as $error): ?>
+        <!-- ... -->
+    <?php endif; ?>
+
+    <form method="post" action="/project1/register" class="register-form">
+
                     <li class="error"><?php echo htmlspecialchars($error); ?></li>
                 <?php endforeach; ?>
             </ul>

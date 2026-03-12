@@ -4,13 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Olympics Athletes</title>
-    <link rel="stylesheet" href="/view/css/style.css">
+    <link rel="stylesheet" href="/project1/view/css/style.css">
 </head>
 <body>
     <header>
         <nav>
             <ul>
-                <li><a href="/">Home</a></li>
+                <li><a href="/project1/">Home</a></li>
                 <?php if (isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true): ?>
                     <li>
                         <span style="margin-right: 15px;">
@@ -18,16 +18,15 @@
                             (<?php echo (isset($_SESSION['authSource']) && $_SESSION['authSource'] === 'google') ? 'Google Login' : 'Local Login'; ?>)
                         </span>
                     </li>
-                    <li><a href="/logout">Logout</a></li>
-<?php else: ?>
-                    <li><a href="/login">Login</a></li>
-                    <li><a href="/register">Register</a></li>
+                    <li><a href="/project1/logout">Logout</a></li>
+                <?php else: ?>
+                    <li><a href="/project1/login">Login</a></li>
+                    <li><a href="/project1/register">Register</a></li>
                 <?php endif; ?>
-                <li><a href="/about">About</a></li>
+                <li><a href="/project1/about">About</a></li>
             </ul>
         </nav>
     </header>
-
     <main>
         <h1>Athletes List</h1>
 
@@ -71,6 +70,6 @@
         </div>
     </main>
 
-    <script src="/view/js/app.js"></script>
+    <script src="/project1/view/js/app.js"></script>
 </body>
 </html>

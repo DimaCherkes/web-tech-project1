@@ -21,7 +21,7 @@ class UserService
         
         // Setup Google Client
         $this->googleClient = new Client();
-        $this->googleClient->setAuthConfig(__DIR__ . '/../../client_secret_webte.json');
+        $this->googleClient->setAuthConfig(__DIR__ . '/../../../client_secret_webte.json');
         $this->googleClient->setRedirectUri($this->getRedirectUri());
         $this->googleClient->addScope(["email", "profile"]);
         $this->googleClient->setAccessType("offline");
