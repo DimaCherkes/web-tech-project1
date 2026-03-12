@@ -11,7 +11,13 @@
         <nav>
             <ul>
                 <li><a href="/">Home</a></li>
-                <li><a href="/register">Register</a></li>
+                <?php if (isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true): ?>
+                    <li><span>Welcome, <?php echo htmlspecialchars($_SESSION['fullName']); ?></span></li>
+                    <li><a href="/logout">Logout</a></li>
+                <?php else: ?>
+                    <li><a href="/login">Login</a></li>
+                    <li><a href="/register">Register</a></li>
+                <?php endif; ?>
                 <li><a href="/about">About</a></li>
             </ul>
         </nav>

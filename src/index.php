@@ -1,5 +1,7 @@
 <?php
 
+session_start();
+
 // Basic Autoloader (Manual since we are not using Composer)
 spl_autoload_register(function ($class) {
     // Map App\ namespace to src/ directory
@@ -48,6 +50,18 @@ if ($path === '/' || $path === '/index.php') {
 if ($path === '/register') {
     $controller = new UserController();
     $controller->register();
+    exit;
+}
+
+if ($path === '/login') {
+    $controller = new UserController();
+    $controller->login();
+    exit;
+}
+
+if ($path === '/logout') {
+    $controller = new UserController();
+    $controller->logout();
     exit;
 }
 

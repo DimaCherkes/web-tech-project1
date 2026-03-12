@@ -30,6 +30,24 @@ class UserService
         return ['success' => true];
     }
 
+    public function authenticate(string $email, string $password): array
+    {
+        $user = $this->userRepository->findByEmail($email);
+
+        if (!$user || !password_verify($password, $user['password_hash'])) {
+            return ['success' => false, 'error' => 'Incorrect email or password.'];
+        }
+
+        return [
+            'success' => true,
+            'user' => [
+                'id' => $user['id'],
+                'fullName' => $user['first_name'] . ' ' . $user['last_name'],
+                'email' => $user['email']
+            ]
+        ];
+    }
+
     private function validateRegistration(array $data): array
     {
         $errors = [];

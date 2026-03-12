@@ -42,4 +42,43 @@ class UserController
 
         require __DIR__ . '/../view/register.php';
     }
+
+    public function login(): void
+    {
+        if (isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true) {
+            header("location: /");
+            exit;
+        }
+
+        $errors = [];
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $email = $_POST['email'] ?? '';
+            $password = $_POST['password'] ?? '';
+
+            $result = $this->userService->authenticate($email, $password);
+
+            if ($result['success']) {
+                $_SESSION['loggedin'] = true;
+                $_SESSION['userId'] = $result['user']['id'];
+                $_SESSION['fullName'] = $result['user']['fullName'];
+                $_SESSION['email'] = $result['user']['email'];
+
+                Logger::info("User logged in: " . $email);
+                header("location: /");
+                exit;
+            } else {
+                $errors[] = $result['error'];
+            }
+        }
+
+        require __DIR__ . '/../view/login.php';
+    }
+
+    public function logout(): void
+    {
+        $_SESSION = [];
+        session_destroy();
+        header("location: /login");
+        exit;
+    }
 }
