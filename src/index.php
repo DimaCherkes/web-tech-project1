@@ -37,17 +37,38 @@ $path = parse_url($requestUri, PHP_URL_PATH);
 
 // Simple path matching
 if ($path === '/' || $path === '/index.php') {
+    if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
+        http_response_code(405);
+        exit;
+    }
     require __DIR__ . '/view/index.php';
     exit;
 }
 
+if ($path === '/register' || $path === '/register.php') {
+    if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
+        http_response_code(405);
+        exit;
+    }
+    require __DIR__ . '/view/register.php';
+    exit;
+}
+
 if ($path === '/athlete' || $path === '/athlete.php') {
+    if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
+        http_response_code(405);
+        exit;
+    }
     require __DIR__ . '/view/athlete.php';
     exit;
 }
 
 // Serve static files
 if (preg_match('/\.(?:css|js)$/', $path)) {
+    if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
+        http_response_code(405);
+        exit;
+    }
     $file = __DIR__ . $path;
     if (file_exists($file)) {
         $mime = str_ends_with($path, '.css') ? 'text/css' : 'application/javascript';
@@ -57,31 +78,31 @@ if (preg_match('/\.(?:css|js)$/', $path)) {
     }
 }
 
-if ($path === '/api/athletes') {
+if ($path === '/api/athletes' && $_SERVER['REQUEST_METHOD'] === 'GET') {
     $controller = new AthleteController();
     $controller->index();
     exit;
 }
 
-if ($path === '/api/athletesList') {
+if ($path === '/api/athletesList' && $_SERVER['REQUEST_METHOD'] === 'GET') {
     $controller = new AthleteController();
     $controller->athletesList();
     exit;
 }
 
-if ($path === '/api/athlete') {
+if ($path === '/api/athlete' && $_SERVER['REQUEST_METHOD'] === 'GET') {
     $controller = new AthleteController();
     $controller->getAthlete();
     exit;
 }
 
-if ($path === '/api/years') {
+if ($path === '/api/years' && $_SERVER['REQUEST_METHOD'] === 'GET') {
     $controller = new GameController();
     $controller->years();
     exit;
 }
 
-if ($path === '/api/categories') {
+if ($path === '/api/categories' && $_SERVER['REQUEST_METHOD'] === 'GET') {
     $controller = new DisciplineController();
     $controller->categories();
     exit;
