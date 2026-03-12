@@ -87,7 +87,7 @@ if ($path === '/auth/google') {
     exit;
 }
 
-if ($path === '/project1/oauth2callback.php') {
+if ($path === '/oauth2callback.php' || $path === '/google-callback') {
     $controller = new UserController();
     $controller->googleCallback();
     exit;

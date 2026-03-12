@@ -30,14 +30,15 @@ class UserRepository
         }
 
         // Create new user if not exists
-        $sql = "INSERT INTO user_accounts (first_name, last_name, email) 
-                VALUES (:first_name, :last_name, :email)";
-        
+        $sql = "INSERT INTO user_accounts (first_name, last_name, email, password_hash) 
+                VALUES (:first_name, :last_name, :email, :password_hash)";
+
         $stmt = $this->db->prepare($sql);
         $stmt->execute([
             ':first_name' => $data['firstName'],
             ':last_name' => $data['lastName'],
-            ':email' => $data['email']
+            ':email' => $data['email'],
+            ':password_hash' => null // Google users don't have a local password
         ]);
 
         return (int)$this->db->lastInsertId();

@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -31,18 +32,16 @@
     <?php endif; ?>
 
     <?php if (!empty($errors)): ?>
-        <!-- ... -->
-    <?php endif; ?>
-
-    <form method="post" action="/project1/register" class="register-form">
-
+        <div class="error-messages">
+            <ul>
+                <?php foreach ($errors as $error): ?>
                     <li class="error"><?php echo htmlspecialchars($error); ?></li>
                 <?php endforeach; ?>
             </ul>
         </div>
     <?php endif; ?>
 
-    <form method="post" action="/register" class="register-form">
+    <form method="post" action="/project1/register" class="register-form">
         <div class="form-group">
             <label for="firstName">First Name:</label>
             <input type="text" name="firstName" id="firstName" placeholder="e.g. John" value="<?php echo htmlspecialchars($_POST['firstName'] ?? ''); ?>">

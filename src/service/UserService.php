@@ -60,8 +60,8 @@ class UserService
         $userId = $this->userRepository->syncGoogleUser([
             'google_id' => $userInfo->id,
             'email' => $userInfo->email,
-            'firstName' => $userInfo->givenName,
-            'lastName' => $userInfo->familyName
+            'firstName' => $userInfo->givenName ?? $userInfo->name ?? 'Google User',
+            'lastName' => $userInfo->familyName ?? ''
         ]);
 
         return [
