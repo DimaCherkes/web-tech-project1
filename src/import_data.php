@@ -8,7 +8,7 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
     exit;
 }
 
-require_once(__DIR__ . '/../config.php');
+require_once(__DIR__ . '/../../config.php');
 require_once 'utils-functions.php';
 require_once(__DIR__ . '/repository/athlete_medals_repo.php');
 require_once(__DIR__ . '/repository/athletes_repo.php');
