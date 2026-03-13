@@ -10,26 +10,63 @@ body {
 
 header {
     background: #fff;
-    padding: 1rem 0;
+    padding: 0.5rem 0;
     border-bottom: 1px solid #ddd;
     margin-bottom: 2rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
 }
 
 header nav ul {
     list-style: none;
     padding: 0;
+    margin: 0;
     display: flex;
-    gap: 20px;
+    gap: 15px;
+    align-items: center;
+    flex-wrap: wrap;
 }
 
 header nav a {
     text-decoration: none;
-    color: #007bff;
-    font-weight: bold;
+    color: #333;
+    font-weight: 500;
+    padding: 8px 12px;
+    border-radius: 4px;
+    transition: background 0.2s;
 }
 
 header nav a:hover {
-    text-decoration: underline;
+    background-color: #f0f7ff;
+    color: #007bff;
+    text-decoration: none;
+}
+
+.user-greeting {
+    margin-right: auto;
+    padding: 8px 12px;
+    color: #666;
+    border-left: 3px solid #007bff;
+    background: #f8f9fa;
+}
+
+.logout-link {
+    color: #dc3545 !important;
+}
+
+.logout-link:hover {
+    background-color: #fff1f0 !important;
+}
+
+@media (max-width: 768px) {
+    header nav ul {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 5px;
+    }
+    .user-greeting {
+        margin-right: 0;
+        margin-bottom: 10px;
+    }
 }
 
 h1 {

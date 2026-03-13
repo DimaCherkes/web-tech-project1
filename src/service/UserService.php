@@ -147,6 +147,35 @@ class UserService
         return $this->loginHistoryRepository->findByUserId($userId);
     }
 
+    public function getUserById(int $id): ?array
+    {
+        return $this->userRepository->findById($id);
+    }
+
+    public function updateProfile(int $userId, array $data): array
+    {
+        if (empty($data['firstName']) || empty($data['lastName'])) {
+            return ['success' => false, 'errors' => ['Meno a priezvisko sú povinné.']];
+        }
+
+        $success = $this->userRepository->update($userId, $data['firstName'], $data['lastName']);
+        return ['success' => $success];
+    }
+
+    public function changePassword(int $userId, string $password, string $passwordRepeat): array
+    {
+        if (strlen($password) < 8) {
+            return ['success' => false, 'errors' => ['Heslo musí mať aspoň 8 znakov.']];
+        }
+
+        if ($password !== $passwordRepeat) {
+            return ['success' => false, 'errors' => ['Heslá sa nezhodujú.']];
+        }
+
+        $success = $this->userRepository->updatePassword($userId, $password);
+        return ['success' => $success];
+    }
+
     private function validateRegistration(array $data): array
     {
         $errors = [];

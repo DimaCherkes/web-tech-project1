@@ -21,6 +21,13 @@ class UserRepository
         return $stmt->fetch() ?: null;
     }
 
+    public function findById(int $id): ?array
+    {
+        $stmt = $this->db->prepare("SELECT * FROM user_accounts WHERE id = :id");
+        $stmt->execute([':id' => $id]);
+        return $stmt->fetch() ?: null;
+    }
+
     public function syncGoogleUser(array $data): int
     {
         $userByEmail = $this->findByEmail($data['email']);
@@ -38,7 +45,7 @@ class UserRepository
             ':first_name' => $data['firstName'],
             ':last_name' => $data['lastName'],
             ':email' => $data['email'],
-            ':password_hash' => null // Google users don't have a local password
+            ':password_hash' => null
         ]);
 
         return (int)$this->db->lastInsertId();
@@ -58,5 +65,24 @@ class UserRepository
             ':tfa_secret' => $data['tfaSecret'] ?? null
         ]);
     }
+
+    public function update(int $userId, string $firstName, string $lastName): bool
+    {
+        $stmt = $this->db->prepare("UPDATE user_accounts SET first_name = :first_name, last_name = :last_name WHERE id = :id");
+        return $stmt->execute([
+            ':first_name' => $firstName,
+            ':last_name' => $lastName,
+            ':id' => $userId
+        ]);
     }
 
+    public function updatePassword(int $userId, string $newPassword): bool
+    {
+        $hash = password_hash($newPassword, PASSWORD_ARGON2ID);
+        $stmt = $this->db->prepare("UPDATE user_accounts SET password_hash = :hash WHERE id = :id");
+        return $stmt->execute([
+            ':hash' => $hash,
+            ':id' => $userId
+        ]);
+    }
+}

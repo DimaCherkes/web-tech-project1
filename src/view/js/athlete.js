@@ -3,7 +3,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const athleteId = urlParams.get('id');
 
     if (!athleteId) {
-        window.location.href = '/';
+        window.location.href = '/project1/';
         return;
     }
 
@@ -16,7 +16,7 @@ document.addEventListener('DOMContentLoaded', () => {
     async function loadAthleteDetails(id) {
         try {
             const res = await fetch(`/project1/api/athlete?id=${id}`);
-            if (!res.ok) throw new Error('Athlete not found');
+            if (!res.ok) throw new Error('Športovec nebol nájdený');
             
             const result = await res.json();
             const a = result.data;
@@ -24,17 +24,17 @@ document.addEventListener('DOMContentLoaded', () => {
             fullNameElem.textContent = `${a.firstName} ${a.lastName}`;
             
             personalInfoElem.innerHTML = `
-                <p><strong>Birth Date:</strong> ${a.birthDate || '-'}</p>
-                <p><strong>Birth Place:</strong> ${a.birthPlace || '-'} (${a.birthCountryName || '-'})</p>
+                <p><strong>Dátum narodenia:</strong> ${a.birthDate || '-'}</p>
+                <p><strong>Miesto narodenia:</strong> ${a.birthPlace || '-'} (${a.birthCountryName || '-'})</p>
                 ${a.deathDate ? `
-                    <p><strong>Death Date:</strong> ${a.deathDate}</p>
-                    <p><strong>Death Place:</strong> ${a.deathPlace || '-'} (${a.deathCountryName || '-'})</p>
-                ` : '<p><strong>Status:</strong> Alive / Information not available</p>'}
+                    <p><strong>Dátum úmrtia:</strong> ${a.deathDate}</p>
+                    <p><strong>Miesto úmrtia:</strong> ${a.deathPlace || '-'} (${a.deathCountryName || '-'})</p>
+                ` : '<p><strong>Stav:</strong> Žije / Informácia nie je dostupná</p>'}
             `;
 
             renderParticipations(a.participations);
         } catch (error) {
-            fullNameElem.textContent = 'Error';
+            fullNameElem.textContent = 'Chyba';
             personalInfoElem.innerHTML = `<p class="error">${error.message}</p>`;
         }
     }
@@ -42,12 +42,19 @@ document.addEventListener('DOMContentLoaded', () => {
     function renderParticipations(participations) {
         participationBody.innerHTML = '';
         if (participations.length === 0) {
-            participationBody.innerHTML = '<tr><td colspan="6">No participation records found.</td></tr>';
+            participationBody.innerHTML = '<tr><td colspan="6">Neboli nájdené žiadne záznamy o účasti.</td></tr>';
             return;
         }
 
         participations.forEach(p => {
             const row = document.createElement('tr');
+            
+            // Localized medal names
+            let placement = p.medalName || p.placing;
+            if (p.medalName === 'Gold') placement = 'Zlato';
+            if (p.medalName === 'Silver') placement = 'Striebro';
+            if (p.medalName === 'Bronze') placement = 'Bronz';
+
             row.innerHTML = `
                 <td>${p.year}</td>
                 <td>${p.type}</td>
@@ -55,7 +62,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <td>${p.disciplineName}</td>
                 <td>${p.category || '-'}</td>
                 <td class="medal-${(p.medalName || '').toLowerCase()}">
-                    ${p.medalName || p.placing}
+                    ${placement}
                 </td>
             `;
             participationBody.appendChild(row);

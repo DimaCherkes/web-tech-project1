@@ -1,32 +1,25 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="sk">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Register - Olympics Athletes</title>
+    <title>Registrácia - Olympijskí športovci</title>
     <link rel="stylesheet" href="/project1/view/css/style.css">
 </head>
 <body>
-<header>
-    <nav>
-        <ul>
-            <li><a href="/project1/">Home</a></li>
-            <li><a href="/project1/register">Register</a></li>
-        </ul>
-    </nav>
-</header>
+<?php include __DIR__ . '/partials/header.php'; ?>
 
 <main>
-    <h1>Register form</h1>
+    <h1>Registračný formulár</h1>
 
     <?php if ($success): ?>
         <div class="success-message">
-            <p>Registration successful! Please set up Two-Factor Authentication.</p>
+            <p>Registrácia prebehla úspešne! Nastavte si, prosím, dvojfaktorovú autentifikáciu (2FA).</p>
             <div class="tfa-setup" style="text-align: center; margin: 20px 0; padding: 20px; border: 1px solid #ddd; background: #fff; border-radius: 8px;">
-                <p>Scan this QR code with your authenticator app (e.g., Google Authenticator):</p>
-                <img src="<?php echo $qrCode; ?>" alt="2FA QR Code" style="margin: 15px 0;">
-                <p>Or enter this code manually: <strong><?php echo $tfaSecret; ?></strong></p>
-                <p style="margin-top: 15px;"><a href="/project1/login" class="button">Go to Login</a></p>
+                <p>Naskenujte tento QR kód pomocou vašej autentifikačnej aplikácie (napr. Google Authenticator):</p>
+                <img src="<?php echo $qrCode; ?>" alt="2FA QR kód" style="margin: 15px 0;">
+                <p>Alebo zadajte tento kód manuálne: <strong><?php echo $tfaSecret; ?></strong></p>
+                <p style="margin-top: 15px;"><a href="/project1/login" class="button">Prejsť na prihlásenie</a></p>
             </div>
         </div>
     <?php endif; ?>
@@ -34,8 +27,14 @@
     <?php if (!empty($errors)): ?>
         <div class="error-messages">
             <ul>
-                <?php foreach ($errors as $error): ?>
-                    <li class="error"><?php echo htmlspecialchars($error); ?></li>
+                <?php foreach ($errors as $error): 
+                    // Simple mapping for common errors to Slovak
+                    $msg = $error;
+                    if ($error == "Email is required.") $msg = "E-mail je povinný.";
+                    if ($error == "Passwords do not match.") $msg = "Heslá sa nezhodujú.";
+                    if (str_contains($error, "already exists")) $msg = "Používateľ s týmto e-mailom už existuje.";
+                ?>
+                    <li class="error"><?php echo htmlspecialchars($msg); ?></li>
                 <?php endforeach; ?>
             </ul>
         </div>
@@ -43,31 +42,31 @@
 
     <form method="post" action="/project1/register" class="register-form">
         <div class="form-group">
-            <label for="firstName">First Name:</label>
-            <input type="text" name="firstName" id="firstName" placeholder="e.g. John" value="<?php echo htmlspecialchars($_POST['firstName'] ?? ''); ?>">
+            <label for="firstName">Meno:</label>
+            <input type="text" name="firstName" id="firstName" placeholder="napr. Ján" value="<?php echo htmlspecialchars($_POST['firstName'] ?? ''); ?>">
         </div>
 
         <div class="form-group">
-            <label for="lastName">Last Name:</label>
-            <input type="text" name="lastName" id="lastName" placeholder="e.g. Doe" value="<?php echo htmlspecialchars($_POST['lastName'] ?? ''); ?>">
+            <label for="lastName">Priezvisko:</label>
+            <input type="text" name="lastName" id="lastName" placeholder="napr. Novák" value="<?php echo htmlspecialchars($_POST['lastName'] ?? ''); ?>">
         </div>
 
         <div class="form-group">
             <label for="email">E-mail:</label>
-            <input type="email" name="email" id="email" placeholder="e.g. johndoe@example.com" value="<?php echo htmlspecialchars($_POST['email'] ?? ''); ?>">
+            <input type="email" name="email" id="email" placeholder="napr. jan.novak@priklad.com" value="<?php echo htmlspecialchars($_POST['email'] ?? ''); ?>">
         </div>
 
         <div class="form-group">
-            <label for="password">Password:</label>
+            <label for="password">Heslo:</label>
             <input type="password" name="password" id="password">
         </div>
 
         <div class="form-group">
-            <label for="password_repeat">Repeat Password:</label>
+            <label for="password_repeat">Zopakujte heslo:</label>
             <input type="password" name="password_repeat" id="password_repeat">
         </div>
 
-        <button type="submit">Create account</button>
+        <button type="submit">Vytvoriť účet</button>
     </form>
 
 </main>

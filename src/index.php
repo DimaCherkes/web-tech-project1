@@ -81,6 +81,17 @@ if ($path === '/history') {
     exit;
 }
 
+if ($path === '/profile') {
+    $controller = new UserController();
+    $controller->profile();
+    exit;
+}
+
+if ($path === '/import') {
+    require __DIR__ . '/import_data.php';
+    exit;
+}
+
 if ($path === '/logout') {
     $controller = new UserController();
     $controller->logout();

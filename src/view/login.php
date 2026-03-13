@@ -1,23 +1,16 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="sk">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - Olympics Athletes</title>
+    <title>Prihlásenie - Olympijskí športovci</title>
     <link rel="stylesheet" href="/project1/view/css/style.css">
 </head>
 <body>
-<header>
-    <nav>
-        <ul>
-            <li><a href="/project1/">Home</a></li>
-            <li><a href="/project1/register">Register</a></li>
-        </ul>
-    </nav>
-</header>
+<?php include __DIR__ . '/partials/header.php'; ?>
 
 <main>
-    <h1>Login</h1>
+    <h1>Prihlásenie</h1>
 
     <?php 
     $get_error = $_GET['error'] ?? null;
@@ -27,8 +20,12 @@
     ?>
         <div class="error-messages">
             <ul>
-                <?php foreach ($errors as $error): ?>
-                    <li class="error"><?php echo htmlspecialchars($error); ?></li>
+                <?php foreach ($errors as $error): 
+                    $msg = $error;
+                    if ($error == "Incorrect email or password.") $msg = "Nesprávny e-mail alebo heslo.";
+                    if ($error == "Invalid 2FA code.") $msg = "Neplatný 2FA kód.";
+                ?>
+                    <li class="error"><?php echo htmlspecialchars($msg); ?></li>
                 <?php endforeach; ?>
             </ul>
         </div>
@@ -37,18 +34,18 @@
     <form method="post" action="/project1/login" class="register-form">
         <?php if ($requires2FA): ?>
             <div class="success-message">
-                <p>Please enter the 6-digit code from your authenticator app.</p>
+                <p>Zadajte prosím 6-miestny kód z vašej autentifikačnej aplikácie.</p>
             </div>
             
             <input type="hidden" name="email" value="<?php echo htmlspecialchars($_POST['email'] ?? ''); ?>">
             <input type="hidden" name="password" value="<?php echo htmlspecialchars($_POST['password'] ?? ''); ?>">
             
             <div class="form-group">
-                <label for="tfaCode">2FA Code:</label>
+                <label for="tfaCode">2FA kód:</label>
                 <input type="text" name="tfaCode" id="tfaCode" required placeholder="123456" autofocus autocomplete="one-time-code">
             </div>
             
-            <button type="submit">Verify 2FA Code</button>
+            <button type="submit">Overiť 2FA kód</button>
         <?php else: ?>
             <div class="form-group">
                 <label for="email">E-mail:</label>
@@ -56,22 +53,22 @@
             </div>
 
             <div class="form-group">
-                <label for="password">Password:</label>
+                <label for="password">Heslo:</label>
                 <input type="password" name="password" id="password" required>
             </div>
 
-            <button type="submit">Log In</button>
+            <button type="submit">Prihlásiť sa</button>
             
             <div style="margin-top: 20px; text-align: center; border-top: 1px solid #eee; padding-top: 20px;">
                 <a href="/project1/auth/google" class="google-btn" style="display: inline-block; background: #4285F4; color: white; padding: 10px 20px; border-radius: 4px; text-decoration: none; font-weight: bold;">
-                    Sign in with Google
+                    Prihlásiť sa cez Google
                 </a>
             </div>
         <?php endif; ?>
     </form>
 
     <p style="text-align: center; margin-top: 20px;">
-        Don't have an account? <a href="/project1/register">Register here.</a>
+        Nemáte ešte účet? <a href="/project1/register">Zaregistrujte sa tu.</a>
     </p>
 
 </main>

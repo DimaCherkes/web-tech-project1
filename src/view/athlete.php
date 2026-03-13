@@ -1,46 +1,39 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="sk">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Athlete Profile</title>
+    <title>Profil športovca</title>
     <link rel="stylesheet" href="/project1/view/css/style.css">
 </head>
 <body>
-    <header>
-        <nav>
-            <ul>
-                <li><a href="/project1/">Home</a></li>
-                <li><a href="/project1/register">Register</a></li>
-            </ul>
-        </nav>
-    </header>
+    <?php include __DIR__ . '/partials/header.php'; ?>
 
     <main id="athlete-profile">
-        <h1 id="full-name">Loading...</h1>
+        <h1 id="full-name">Načítavam...</h1>
 
         <section class="details-card">
-            <h2>Personal Information</h2>
+            <h2>Osobné informácie</h2>
             <div id="personal-info">
-                <!-- Data will be loaded here -->
+                <!-- Dáta sa načítajú sem -->
             </div>
         </section>
 
         <section class="participation-history">
-            <h2>Olympic History</h2>
+            <h2>Olympijská história</h2>
             <table id="participationTable">
                 <thead>
                     <tr>
-                        <th>Year</th>
-                        <th>Type</th>
-                        <th>City</th>
-                        <th>Discipline</th>
-                        <th>Category</th>
-                        <th>Medal / Place</th>
+                        <th>Rok</th>
+                        <th>Typ</th>
+                        <th>Mesto</th>
+                        <th>Disciplína</th>
+                        <th>Kategória</th>
+                        <th>Medaile / Umiestnenie</th>
                     </tr>
                 </thead>
                 <tbody id="participationBody">
-                    <!-- Data will be loaded here -->
+                    <!-- Dáta sa načítajú sem -->
                 </tbody>
             </table>
         </section>

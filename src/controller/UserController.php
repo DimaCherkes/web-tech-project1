@@ -146,4 +146,41 @@ class UserController
 
         require __DIR__ . '/../view/history.php';
     }
+
+    public function profile(): void
+    {
+        if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
+            header("location: /project1/login");
+            exit;
+        }
+
+        $userId = (int)$_SESSION['userId'];
+        $errors = [];
+        $success = false;
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            if (isset($_POST['update_profile'])) {
+                $result = $this->userService->updateProfile($userId, [
+                    'firstName' => $_POST['firstName'] ?? '',
+                    'lastName' => $_POST['lastName'] ?? ''
+                ]);
+                if ($result['success']) {
+                    $success = "Profil bol úspešne aktualizovaný.";
+                    $_SESSION['fullName'] = $_POST['firstName'] . ' ' . $_POST['lastName'];
+                } else {
+                    $errors = $result['errors'];
+                }
+            } elseif (isset($_POST['change_password'])) {
+                $result = $this->userService->changePassword($userId, $_POST['password'] ?? '', $_POST['password_repeat'] ?? '');
+                if ($result['success']) {
+                    $success = "Heslo bolo úspešne zmenené.";
+                } else {
+                    $errors = $result['errors'];
+                }
+            }
+        }
+
+        $user = $this->userService->getUserById($userId);
+        require __DIR__ . '/../view/profile.php';
+    }
 }

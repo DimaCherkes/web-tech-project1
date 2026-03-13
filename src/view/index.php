@@ -1,47 +1,28 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="sk">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Olympics Athletes</title>
+    <title>Olympijskí športovci</title>
     <link rel="stylesheet" href="/project1/view/css/style.css">
 </head>
 <body>
-    <header>
-        <nav>
-            <ul>
-                <li><a href="/project1/">Home</a></li>
-                <?php if (isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true): ?>
-                    <li>
-                        <span style="margin-right: 15px;">
-                            Welcome, <?php echo htmlspecialchars($_SESSION['fullName']); ?> 
-                            (<?php echo (isset($_SESSION['authSource']) && $_SESSION['authSource'] === 'google') ? 'Google Login' : 'Local Login'; ?>)
-                        </span>
-                    </li>
-                    <li><a href="/project1/history">My History</a></li>
-                    <li><a href="/project1/logout">Logout</a></li>
-                <?php else: ?>
-                    <li><a href="/project1/login">Login</a></li>
-                    <li><a href="/project1/register">Register</a></li>
-                <?php endif; ?>
-                <li><a href="/project1/about">About</a></li>
-            </ul>
-        </nav>
-    </header>
+    <?php include __DIR__ . '/partials/header.php'; ?>
+
     <main>
-        <h1>Athletes List</h1>
+
 
         <div class="filters">
             <div class="filter-group">
-                <label for="categoryFilter">Category:</label>
+                <label for="categoryFilter">Kategória:</label>
                 <select id="categoryFilter">
-                    <option value="">All Categories</option>
+                    <option value="">Všetky kategórie</option>
                 </select>
             </div>
             <div class="filter-group">
-                <label for="yearFilter">Year:</label>
+                <label for="yearFilter">Rok:</label>
                 <select id="yearFilter">
-                    <option value="">All Years</option>
+                    <option value="">Všetky roky</option>
                 </select>
             </div>
         </div>
@@ -51,23 +32,23 @@
                 <thead>
                     <tr>
                         <th data-sort="id">ID</th>
-                        <th data-sort="firstName">First Name</th>
-                        <th data-sort="lastName">Last Name</th>
-                        <th data-sort="year">Year</th>
-                        <th data-sort="country">Country</th>
-                        <th data-sort="sportName">Discipline</th>
+                        <th data-sort="firstName">Meno</th>
+                        <th data-sort="lastName">Priezvisko</th>
+                        <th data-sort="year">Rok</th>
+                        <th data-sort="country">Krajina</th>
+                        <th data-sort="sportName">Disciplína</th>
                     </tr>
                 </thead>
                 <tbody id="athletesBody">
-                    <!-- Data will be loaded here -->
+                    <!-- Dáta sa načítajú sem -->
                 </tbody>
             </table>
         </div>
 
         <div class="pagination">
-            <button id="prevPage">Previous</button>
-            <span id="pageInfo">Page 1 of 1</span>
-            <button id="nextPage">Next</button>
+            <button id="prevPage">Predchádzajúca</button>
+            <span id="pageInfo">Strana 1 z 1</span>
+            <button id="nextPage">Nasledujúca</button>
         </div>
     </main>
 
