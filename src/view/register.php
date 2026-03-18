@@ -67,6 +67,12 @@
         </div>
 
         <button type="submit">Vytvoriť účet</button>
+
+        <div style="margin-top: 20px; text-align: center; border-top: 1px solid #eee; padding-top: 20px;">
+            <a href="/project1/auth/google" class="google-btn" style="display: inline-block; background: #4285F4; color: white; padding: 10px 20px; border-radius: 4px; text-decoration: none; font-weight: bold;">
+                Registrácia cez Google
+            </a>
+        </div>
     </form>
 
 </main>
