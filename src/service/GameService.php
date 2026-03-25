@@ -2,19 +2,19 @@
 
 namespace App\Service;
 
-use App\Repository\GameRepository;
+use App\Repository\OlympicGamesRepository;
 
 class GameService
 {
-    private GameRepository $gameRepository;
+    private OlympicGamesRepository $gameRepository;
 
     public function __construct()
     {
-        $this->gameRepository = new GameRepository();
+        $this->gameRepository = new OlympicGamesRepository();
     }
 
     public function getAllYears(): array
     {
-        return $this->gameRepository->findAllYears();
+        return $this->gameRepository->findAllByAllYears();
     }
 }

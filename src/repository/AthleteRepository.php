@@ -1,15 +1,17 @@
 <?php
 
-namespace App\Repository;
+namespace App\repository;
 
 use App\Core\Database;
 use PDO;
 
 class AthleteRepository {
     private PDO $db;
+    private CountryRepository $countryRepository;
 
     public function __construct() {
         $this->db = Database::getConnection();
+        $this->countryRepository = new CountryRepository();
     }
 
     /**
@@ -22,7 +24,7 @@ class AthleteRepository {
      */
     public function findAll(array $filters = [], string $sortBy = 'id', string $sortDir = 'ASC', int $page = 1, int $pageSize = 10): array {
         $offset = ($page - 1) * $pageSize;
-        
+
         // Allowed sort columns for safety (avoid SQL Injection)
         $allowedSort = ['id', 'firstName', 'lastName', 'birthDate'];
         if (!in_array($sortBy, $allowedSort)) {
@@ -34,7 +36,7 @@ class AthleteRepository {
         $sql = "SELECT a.*, c.name as birth_country_name 
                 FROM athletes a
                 LEFT JOIN countries c ON a.birth_country_id = c.id";
-        
+
         $where = [];
         $params = [];
 
@@ -58,7 +60,7 @@ class AthleteRepository {
 
         // Sorting & Pagination
         $sql .= " ORDER BY $sortBy $sortDir LIMIT :limit OFFSET :offset";
-        
+
         $stmt = $this->db->prepare($sql);
 
         // Re-bind params
@@ -68,7 +70,7 @@ class AthleteRepository {
         // PDO::PARAM_INT используется для проверки на sql инъекцию?
         $stmt->bindValue(':limit', $pageSize, PDO::PARAM_INT);
         $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
-        
+
         $stmt->execute();
         return $stmt->fetchAll();
     }
@@ -83,7 +85,7 @@ class AthleteRepository {
      */
     public function findAllList(array $filters = [], string $sortBy = 'id', string $sortDir = 'ASC', int $page = 1, int $pageSize = 10): array {
         $offset = ($page - 1) * $pageSize;
-        
+
         // Map DTO field names to SQL column names for sorting
         $sortMap = [
             'id' => 'a.id',
@@ -115,7 +117,7 @@ class AthleteRepository {
                 JOIN olympic_games og ON am.olympic_games_id = og.id
                 JOIN disciplines d ON am.discipline_id = d.id
                 LEFT JOIN countries c ON a.birth_country_id = c.id";
-        
+
         $where = [];
         $params = [];
 
@@ -143,17 +145,17 @@ class AthleteRepository {
 
         // Sorting & Pagination
         $sql .= " ORDER BY $orderSql $sortDir LIMIT :limit OFFSET :offset";
-        
+
         $stmt = $this->db->prepare($sql);
 
         // Bind filters
         foreach ($params as $key => $val) {
             $stmt->bindValue($key, $val);
         }
-        
+
         $stmt->bindValue(':limit', $pageSize, PDO::PARAM_INT);
         $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
-        
+
         $stmt->execute();
         return $stmt->fetchAll();
     }
@@ -164,7 +166,7 @@ class AthleteRepository {
                 JOIN athlete_medals am ON a.id = am.athlete_id
                 JOIN olympic_games og ON am.olympic_games_id = og.id
                 JOIN disciplines d ON am.discipline_id = d.id";
-        
+
         $where = [];
         $params = [];
 
@@ -220,7 +222,7 @@ class AthleteRepository {
                 LEFT JOIN countries c ON a.birth_country_id = c.id
                 LEFT JOIN countries dc ON a.death_country_id = dc.id
                 WHERE a.id = :id";
-        
+
         $stmt = $this->db->prepare($sql);
         $stmt->execute([':id' => $id]);
         $row = $stmt->fetch();
@@ -242,9 +244,72 @@ class AthleteRepository {
                 JOIN medal_types mt ON am.medal_type_id = mt.id
                 WHERE am.athlete_id = :athlete_id
                 ORDER BY og.year DESC";
-        
+
         $stmt = $this->db->prepare($sql);
         $stmt->execute([':athlete_id' => $athleteId]);
         return $stmt->fetchAll();
     }
+
+    public function insertAthlete(
+        string $firstName,
+        string $lastName,
+        ?string $birthDate = null,
+        ?string $birthPlace = null,
+        ?string $birthCountryName = null,
+        ?string $deathDate = null,
+        ?string $deathPlace = null,
+        ?string $deathCountryName = null
+    ): int {
+        $existingId = $this->findAthleteId($firstName, $lastName);
+        if ($existingId) {
+            return $existingId;
+        }
+
+        $birthCountryId = null;
+        if ($birthCountryName) {
+            $birthCountryId = $this->countryRepository->findCountryId($birthCountryName);
+            if (!$birthCountryId) {
+                $birthCountryId = $this->countryRepository->insertCountry($birthCountryName);
+            }
+        }
+
+        $deathCountryId = null;
+        if ($deathCountryName) {
+            $deathCountryId = $this->countryRepository->findCountryId($deathCountryName);
+            if (!$deathCountryId) {
+                $deathCountryId = $this->countryRepository->insertCountry($deathCountryName);
+            }
+        }
+
+        $sql = "INSERT INTO athletes
+            (first_name, last_name, birth_date, birth_place, birth_country_id,
+             death_date, death_place, death_country_id)
+            VALUES
+            (:first_name, :last_name, :birth_date, :birth_place, :birth_country_id,
+             :death_date, :death_place, :death_country_id)";
+
+        $stmt = $this->db->prepare($sql);
+
+        $stmt->execute([
+            ':first_name' => $firstName,
+            ':last_name' => $lastName,
+            ':birth_date' => $birthDate,
+            ':birth_place' => $birthPlace,
+            ':birth_country_id' => $birthCountryId,
+            ':death_date' => $deathDate,
+            ':death_place' => $deathPlace,
+            ':death_country_id' => $deathCountryId
+        ]);
+
+        return (int) $this->db->lastInsertId();
+    }
+
+    private function findAthleteId(string $firstName, string $lastName): ?int {
+        $sql = "SELECT id FROM athletes WHERE first_name = :first_name AND last_name = :last_name";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([':first_name' => $firstName, ':last_name' => $lastName]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $row ? (int) $row['id'] : null;
+    }
+
 }
