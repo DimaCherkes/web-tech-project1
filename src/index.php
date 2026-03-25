@@ -33,7 +33,7 @@ spl_autoload_register(function ($class) {
 use App\Controller\AthleteController;
 use App\Controller\GameController;
 use App\Controller\DisciplineController;
-use App\controller\ImportController;
+use App\Controller\ImportController;
 use App\Controller\UserController;
 
 // Simple Router
@@ -89,7 +89,6 @@ if ($path === '/profile') {
 }
 
 if ($path === '/import') {
-    require __DIR__ . '/import_data.php';
     $controller = new ImportController();
     $controller->import();
     exit;

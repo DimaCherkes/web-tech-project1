@@ -27,42 +27,44 @@ class ImportService
         $this->athleteMedalsRepository = new AthleteMedalsRepository();
     }
 
-    public function importData()
+    /**
+     * @param string $filePath
+     * @return array
+     * @throws \Exception
+     */
+    public function importData(string $filePath): array
     {
-        session_start();
+        $data = $this->utilsService->parseCsvToAssocArray($filePath, ",");
 
-        // Restriction: Only logged in users can access this page
-        if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
-            header("location: /project1/login");
-            exit;
+        if (empty($data)) {
+            throw new \Exception("Súbor je prázdny alebo má nesprávny formát.");
         }
 
-        $data = [];
+        $stats = [
+            'total_rows' => count($data),
+            'processed' => 0,
+            'skipped' => 0
+        ];
 
-        if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['csv_file'])) {
+        // Detect CSV type by headers of the first row
+        $firstRow = $data[0];
 
-            $file = $_FILES['csv_file'];
-            $ext = pathinfo($file['name'], PATHINFO_EXTENSION);
-
-            if (strtolower($ext) !== 'csv') {
-                die("Povolené sú iba CSV súbory.");
-            }
-
-            if ($file['error'] === 0) {
-                $data = $this->utilsService->parseCsvToAssocArray($file['tmp_name'], ",");
-            }
-            // Detect CSV type by headers of the first row
-            $firstRow = $data[0];
-
-            if (isset($firstRow['type'], $firstRow['year'], $firstRow['city'], $firstRow['country'])) {
-                // Processing games CSV: oh_v2(OH).csv
-                foreach ($data as $row) {
-                    $countryId = $this->countryRepository->insertCountry($row['country'], $row['code'] ?? null);
+        if (isset($firstRow['type'], $firstRow['year'], $firstRow['city'], $firstRow['country'])) {
+            // Processing games CSV: oh_v2(OH).csv
+            foreach ($data as $row) {
+                try {
+                    $this->countryRepository->insertCountry($row['country'], $row['code'] ?? null);
                     $this->olympicGamesRepository->insertOlympicGames((int)$row['year'], $row['type'], $row['city'], $row['country']);
+                    $stats['processed']++;
+                } catch (\Exception $e) {
+                    // Log error if needed, skip the row
+                    $stats['skipped']++;
                 }
-            } elseif (isset($firstRow['placing'], $firstRow['discipline'], $firstRow['name'], $firstRow['surname'])) {
-                // Processing people CSV: oh_v2-people.csv
-                foreach ($data as $row) {
+            }
+        } elseif (isset($firstRow['placing'], $firstRow['discipline'], $firstRow['name'], $firstRow['surname'])) {
+            // Processing people CSV: oh_v2-people.csv
+            foreach ($data as $row) {
+                try {
                     // 1. Ensure country exists
                     $this->countryRepository->insertCountry($row['oh_country']);
 
@@ -95,8 +97,17 @@ class ImportService
 
                     // 5. Insert placement/result
                     $this->athleteMedalsRepository->insertAthleteMedal($athleteId, $gameId, $disciplineId, $row['placing']);
+                    
+                    $stats['processed']++;
+                } catch (\Exception $e) {
+                    // Log error if needed, skip the row
+                    $stats['skipped']++;
                 }
             }
+        } else {
+            throw new \Exception("Nerozpoznaný formát CSV hlavičiek.");
         }
+
+        return $stats;
     }
 }
