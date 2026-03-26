@@ -2,6 +2,7 @@
 
 namespace App\Service;
 
+use App\dto\CountryDTO;
 use App\Repository\CountryRepository;
 
 class CountryService {
@@ -11,7 +12,7 @@ class CountryService {
         $this->countryRepository = new CountryRepository();
     }
 
-    public function getAllCountries(array $queryParams): array {
+    public function getAll(array $queryParams): array {
         $page = (int)($queryParams['page'] ?? 1);
         $pageSize = (int)($queryParams['pageSize'] ?? 10);
 
@@ -28,4 +29,39 @@ class CountryService {
             ]
         ];
     }
+
+    public function create(array $data): int
+    {
+        return $this->countryRepository->insertCountry($data['name'], $data['code']);
+    }
+
+    public function getById(int $id): ?CountryDTO {
+        $countryData = $this->countryRepository->findById($id);
+
+        if (!$countryData) {
+            return null;
+        }
+
+        return new CountryDTO($countryData);
+    }
+
+    public function update(int $id, array $data): bool
+    {
+        $existing = $this->countryRepository->findById($id);
+        if (!$existing) {
+            return false;
+        }
+
+        return $this->countryRepository->updateCountry(
+            $id,
+            !empty($data['name']) ? $data['name'] : $existing['name'],
+            !empty($data['code']) ? $data['code'] : $existing['code'],
+        );
+    }
+
+    public function delete(int $id): bool
+    {
+        return $this->countryRepository->delete($id);
+    }
+
 }

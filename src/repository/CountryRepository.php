@@ -61,7 +61,7 @@ class CountryRepository
         ]);
     }
 
-    public function deleteCountry(int $id): bool {
+    public function delete(int $id): bool {
         // a. Delete from athlete_medals where olympic_games_id IN (select id from olympic_games where country_id = :id)
         $sql = "DELETE FROM athlete_medals WHERE olympic_games_id IN (SELECT id FROM olympic_games WHERE country_id = :id)";
         $stmt = $this->db->prepare($sql);

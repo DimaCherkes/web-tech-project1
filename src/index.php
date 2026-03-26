@@ -115,13 +115,13 @@ if ($path === '/oauth2callback.php' || $path === '/google-callback') {
 // ATHLETES
 if ($path === '/api/allAthletes') {
     $controller = new AthleteController();
-    if ($method === 'GET') $controller->getAllAthletes();            // OK
+    if ($method === 'GET') $controller->getAll();            // OK
     exit;
 }
 
 if ($path === '/api/createAthlete') {
     $controller = new AthleteController();
-    if ($method === 'POST') $controller->createAthlete();          // OK
+    if ($method === 'POST') $controller->createAthlete();          // OK; method with auth
     exit;
 }
 
@@ -129,29 +129,30 @@ if ($idMatches = matchRoute('/api/athletes/{id}', $path)) {
     $controller = new AthleteController();
     $id = (int)$idMatches[0];
     if ($method === 'GET') $controller->getAthleteDetails($id);         // OK
-    if ($method === 'PUT') $controller->update($id);                    // OK
-    if ($method === 'DELETE') $controller->delete($id);                 // OK
+    if ($method === 'PUT') $controller->update($id);                    // OK; method with auth
+    if ($method === 'DELETE') $controller->delete($id);                 // OK; method with auth
     exit;
 }
 
 // COUNTRIES
-if ($path === '/api/countries') {
-    $controller = new AdminController();
-    if ($method === 'POST') $controller->createCountry();
+if ($path === '/api/allCountries') {
+    $controller = new CountryController();
+    if ($method === 'GET') $controller->getAll();           // OK
     exit;
 }
 
-if ($path === '/api/allCountries') {
+if ($path === '/api/createCountry') {
     $controller = new CountryController();
-    if ($method === 'GET') $controller->getAllCountries();  // OK
+    if ($method === 'POST') $controller->create();          // OK; method with auth
     exit;
 }
 
 if ($idMatches = matchRoute('/api/countries/{id}', $path)) {
-    $controller = new AdminController();
+    $controller = new CountryController();
     $id = (int)$idMatches[0];
-    if ($method === 'PUT') $controller->updateCountry($id);
-    if ($method === 'DELETE') $controller->deleteCountry($id);
+    if ($method === 'GET') $controller->getById($id);           // ?
+    if ($method === 'PUT') $controller->update($id);            // ?
+    if ($method === 'DELETE') $controller->delete($id);         // ?
     exit;
 }
 

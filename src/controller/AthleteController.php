@@ -17,10 +17,18 @@ class AthleteController
         $this->athleteService = new AthleteService();
     }
 
+    private function checkAuth(): void
+    {
+        if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
+            header("location: /project1/login");
+            exit;
+        }
+    }
+
     /**
      * GET /api/allAthletes
      */
-    public function getAllAthletes(): void
+    public function getAll(): void
     {
         header('Content-Type: application/json; charset=utf-8');
 
@@ -84,6 +92,7 @@ class AthleteController
      */
     public function createAthlete(): void
     {
+        $this->checkAuth();
         header('Content-Type: application/json; charset=utf-8');
         
         $data = $this->getRequestData();
@@ -130,6 +139,7 @@ class AthleteController
      */
     public function update(int $id): void
     {
+        $this->checkAuth();
         header('Content-Type: application/json; charset=utf-8');
         
         $data = $this->getRequestData();
@@ -137,6 +147,7 @@ class AthleteController
         try {
             $success = $this->athleteService->updateAthlete($id, $data);
             if ($success) {
+                http_response_code(200);
                 echo json_encode(['message' => 'Athlete updated successfully']);
             } else {
                 http_response_code(404);
@@ -153,6 +164,7 @@ class AthleteController
      */
     public function delete(int $id): void
     {
+        $this->checkAuth();
         header('Content-Type: application/json; charset=utf-8');
 
         try {
