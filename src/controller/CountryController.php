@@ -1,20 +1,15 @@
 <?php
 
-namespace App\Controller;
+namespace App\controller;
 
-use App\Dto\AthleteDTO;
-use App\Dto\AthleteListDTO;
-use App\Service\AthleteService;
 use App\Service\CountryService;
 use App\Core\Logger;
 
 class CountryController {
     private CountryService $countryService;
-    private AthleteService $athleteService;
 
     public function __construct() {
         $this->countryService = new CountryService();
-        $this->athleteService = new AthleteService();
     }
 
     private function checkAuth(): void
@@ -36,6 +31,7 @@ class CountryController {
         try {
             $result = $this->countryService->getAll($queryParams);
 
+            http_response_code(200);
             echo json_encode($result, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
 
         } catch (\Throwable $e) {

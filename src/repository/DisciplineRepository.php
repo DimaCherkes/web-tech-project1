@@ -27,6 +27,22 @@ class DisciplineRepository
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
+    public function findAllPageable(int $page = 1, int $pageSize = 10): array {
+        $offset = ($page - 1) * $pageSize;
+        $sql = "SELECT * FROM disciplines ORDER BY name ASC LIMIT :limit OFFSET :offset";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindValue(':limit', $pageSize, PDO::PARAM_INT);
+        $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function count(): int {
+        $sql = "SELECT COUNT(*) FROM disciplines";
+        $stmt = $this->db->query($sql);
+        return (int) $stmt->fetchColumn();
+    }
+
     public function findById(int $id): ?array {
         $sql = "SELECT * FROM disciplines WHERE id = :id";
         $stmt = $this->db->prepare($sql);
@@ -45,7 +61,7 @@ class DisciplineRepository
         ]);
     }
 
-    public function deleteDiscipline(int $id): bool {
+    public function delete(int $id): bool {
         $sql = "DELETE FROM athlete_medals WHERE discipline_id = :id";
         $stmt = $this->db->prepare($sql);
         $stmt->execute([':id' => $id]);

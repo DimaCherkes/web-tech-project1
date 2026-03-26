@@ -150,23 +150,31 @@ if ($path === '/api/createCountry') {
 if ($idMatches = matchRoute('/api/countries/{id}', $path)) {
     $controller = new CountryController();
     $id = (int)$idMatches[0];
-    if ($method === 'GET') $controller->getById($id);           // ?
-    if ($method === 'PUT') $controller->update($id);            // ?
-    if ($method === 'DELETE') $controller->delete($id);         // ?
+    if ($method === 'GET') $controller->getById($id);           // OK
+    if ($method === 'PUT') $controller->update($id);            // OK; method with auth
+    if ($method === 'DELETE') $controller->delete($id);         // OK; method with auth
     exit;
 }
 
 // DISCIPLINES
-if ($path === '/api/disciplines') {
-    $controller = new AdminController();
-    if ($method === 'POST') $controller->createDiscipline();
+if ($path === '/api/allDisciplines') {
+    $controller = new DisciplineController();
+    if ($method === 'GET') $controller->getAll();           // OK
     exit;
 }
-if ($idMatches = matchRoute('/api/disciplines/{id}', $path)) {
-    $controller = new AdminController();
+
+if ($path === '/api/createDiscipline') {
+    $controller = new DisciplineController();
+    if ($method === 'POST') $controller->create();          // OK; method with auth
+    exit;
+}
+
+if ($idMatches = matchRoute('/api/discipline/{id}', $path)) {
+    $controller = new DisciplineController();
     $id = (int)$idMatches[0];
-    if ($method === 'PUT') $controller->updateDiscipline($id);
-    if ($method === 'DELETE') $controller->deleteDiscipline($id);
+    if ($method === 'GET') $controller->getById($id);           // OK
+    if ($method === 'PUT') $controller->update($id);            // OK; method with auth
+    if ($method === 'DELETE') $controller->delete($id);         // OK; method with auth
     exit;
 }
 

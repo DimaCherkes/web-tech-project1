@@ -2,23 +2,23 @@
 
 namespace App\dto;
 
-class CountryDTO
+class DisciplineDTO
 {
     private int $id;
     private string $name;
-    private string $code;
+    private string $category;
 
     public function __construct(array $data) {
         $this->id = (int) ($data['id'] ?? 0);
         $this->name = (string) ($data['name'] ?? '');
-        $this->code = (string) ($data['code'] ?? '');
+        $this->category = (string) ($data['category'] ?? '');
     }
 
     public function toArray(): array {
         return [
             'id' => $this->id,
             'name' => $this->name,
-            'code' => $this->code
+            'code' => $this->category
         ];
     }
 }
