@@ -119,16 +119,20 @@ class AthleteController
     {
         header('Content-Type: application/json; charset=utf-8');
 
+        Logger::info("Request: GET /api/athletes/{" . $id . "}");
+
         try {
             $athlete = $this->athleteService->getAthleteById($id);
             if (!$athlete) {
+                Logger::info("Athlete with ID " . $id . " not found in DB.");
                 http_response_code(404);
-                echo json_encode(['error' => 'Athlete not found']);
+                echo json_encode(['error' => 'Athlete not found', 'id' => $id]);
                 return;
             }
 
             echo json_encode(['data' => $athlete->toArray()], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
         } catch (\Throwable $e) {
+            Logger::error("Error in AthleteController", $e);
             http_response_code(500);
             echo json_encode(['error' => 'Internal Server Error']);
         }

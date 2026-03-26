@@ -113,6 +113,12 @@ if ($path === '/oauth2callback.php' || $path === '/google-callback') {
 // --- API ROUTES ---
 
 // ATHLETES
+if ($path === '/api/athletesList') {
+    $controller = new AthleteController();
+    if ($method === 'GET') $controller->athletesList();
+    exit;
+}
+
 if ($path === '/api/allAthletes') {
     $controller = new AthleteController();
     if ($method === 'GET') $controller->getAll();            // OK
@@ -122,6 +128,13 @@ if ($path === '/api/allAthletes') {
 if ($path === '/api/createAthlete') {
     $controller = new AthleteController();
     if ($method === 'POST') $controller->createAthlete();          // OK; method with auth
+    exit;
+}
+
+if ($path === '/api/athlete' && isset($_GET['id'])) {
+    $controller = new AthleteController();
+    $id = (int)$_GET['id'];
+    if ($method === 'GET') $controller->getAthleteDetails($id);
     exit;
 }
 
@@ -225,16 +238,6 @@ if ($path === '/api/categories' && $method === 'GET') {
 }
 
 // ADMIN / IMPORT (View)
-if ($path === '/admin') {
-    $controller = new AdminController();
-    $controller->index();
-    exit;
-}
-if ($path === '/admin/athlete/edit') {
-    $controller = new AdminController();
-    $controller->editAthlete();
-    exit;
-}
 if ($path === '/import') {
     $controller = new ImportController();
     $controller->import();

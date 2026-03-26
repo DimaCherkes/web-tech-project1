@@ -98,7 +98,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             // Use RESTful endpoint
-            const res = await fetch(`/project1/api/athletes?${params.toString()}`);
+            const res = await fetch(`/project1/api/athletesList?${params.toString()}`);
             const result = await res.json();
 
             renderTable(result.data);

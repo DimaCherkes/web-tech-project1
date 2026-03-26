@@ -225,7 +225,7 @@ class AthleteRepository {
 
         $stmt = $this->db->prepare($sql);
         $stmt->execute([':id' => $id]);
-        $row = $stmt->fetch();
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
         return $row ?: null;
     }
 

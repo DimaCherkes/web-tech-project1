@@ -82,11 +82,6 @@ class AthleteMedalsRepository
 
         $placingInt = (int)$placing;
 
-        // Only process top 3 spots as medals
-        if ($placingInt < 1 || $placingInt > 3) {
-            return 0;
-        }
-
         // Get medal type ID from separate repository
         $medalTypeId = $this->medalTypesRepository->ensureMedalTypeExists($placingInt);
 
