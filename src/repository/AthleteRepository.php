@@ -312,4 +312,51 @@ class AthleteRepository {
         return $row ? (int) $row['id'] : null;
     }
 
+    public function updateAthlete(
+        int $id,
+        string $firstName,
+        string $lastName,
+        ?string $birthDate = null,
+        ?string $birthPlace = null,
+        ?int $birthCountryId = null,
+        ?string $deathDate = null,
+        ?string $deathPlace = null,
+        ?int $deathCountryId = null
+    ): bool {
+        $sql = "UPDATE athletes SET 
+                first_name = :first_name, 
+                last_name = :last_name, 
+                birth_date = :birth_date, 
+                birth_place = :birth_place, 
+                birth_country_id = :birth_country_id,
+                death_date = :death_date, 
+                death_place = :death_place, 
+                death_country_id = :death_country_id
+                WHERE id = :id";
+
+        $stmt = $this->db->prepare($sql);
+
+        return $stmt->execute([
+            ':id' => $id,
+            ':first_name' => $firstName,
+            ':last_name' => $lastName,
+            ':birth_date' => $birthDate,
+            ':birth_place' => $birthPlace,
+            ':birth_country_id' => $birthCountryId,
+            ':death_date' => $deathDate,
+            ':death_place' => $deathPlace,
+            ':death_country_id' => $deathCountryId
+        ]);
+    }
+
+    public function deleteAthlete(int $id): bool {
+        $sql = "DELETE FROM athlete_medals WHERE athlete_id = :id";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([':id' => $id]);
+
+        $sql = "DELETE FROM athletes WHERE id = :id";
+        $stmt = $this->db->prepare($sql);
+        return $stmt->execute([':id' => $id]);
+    }
+
 }

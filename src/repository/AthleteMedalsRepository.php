@@ -32,6 +32,48 @@ class AthleteMedalsRepository
         return $row ? (int) $row['id'] : null;
     }
 
+    public function findAll(): array {
+        $sql = "SELECT am.*, a.first_name, a.last_name, og.year, d.name as discipline_name, mt.name as medal_name
+                FROM athlete_medals am
+                JOIN athletes a ON am.athlete_id = a.id
+                JOIN olympic_games og ON am.olympic_games_id = og.id
+                JOIN disciplines d ON am.discipline_id = d.id
+                JOIN medal_types mt ON am.medal_type_id = mt.id";
+        $stmt = $this->db->query($sql);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function findById(int $id): ?array {
+        $sql = "SELECT * FROM athlete_medals WHERE id = :id";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([':id' => $id]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $row ?: null;
+    }
+
+    public function updateAthleteMedal(int $id, int $athleteId, int $gameId, int $disciplineId, int $medalTypeId): bool {
+        $sql = "UPDATE athlete_medals SET 
+                athlete_id = :athlete_id, 
+                olympic_games_id = :game_id, 
+                discipline_id = :discipline_id, 
+                medal_type_id = :medal_type_id 
+                WHERE id = :id";
+        $stmt = $this->db->prepare($sql);
+        return $stmt->execute([
+            ':id' => $id,
+            ':athlete_id' => $athleteId,
+            ':game_id' => $gameId,
+            ':discipline_id' => $disciplineId,
+            ':medal_type_id' => $medalTypeId
+        ]);
+    }
+
+    public function deleteAthleteMedal(int $id): bool {
+        $sql = "DELETE FROM athlete_medals WHERE id = :id";
+        $stmt = $this->db->prepare($sql);
+        return $stmt->execute([':id' => $id]);
+    }
+
     function insertAthleteMedal(int $athleteId, int $gameId, int $disciplineId, string $placing): int {
         $existingId = $this->findAthleteMedal($athleteId, $gameId, $disciplineId);
         if ($existingId) {
@@ -47,6 +89,26 @@ class AthleteMedalsRepository
 
         // Get medal type ID from separate repository
         $medalTypeId = $this->medalTypesRepository->ensureMedalTypeExists($placingInt);
+
+        $sql = "INSERT INTO athlete_medals (athlete_id, olympic_games_id, discipline_id, medal_type_id) 
+            VALUES (:athlete_id, :game_id, :discipline_id, :medal_type_id)";
+
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([
+            ':athlete_id' => $athleteId,
+            ':game_id' => $gameId,
+            ':discipline_id' => $disciplineId,
+            ':medal_type_id' => $medalTypeId
+        ]);
+
+        return (int) $this->db->lastInsertId();
+    }
+
+    public function insertAthleteMedalByIds(int $athleteId, int $gameId, int $disciplineId, int $medalTypeId): int {
+        $existingId = $this->findAthleteMedal($athleteId, $gameId, $disciplineId);
+        if ($existingId) {
+            return $existingId;
+        }
 
         $sql = "INSERT INTO athlete_medals (athlete_id, olympic_games_id, discipline_id, medal_type_id) 
             VALUES (:athlete_id, :game_id, :discipline_id, :medal_type_id)";

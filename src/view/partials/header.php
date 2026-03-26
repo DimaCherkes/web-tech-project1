@@ -11,6 +11,7 @@
                 </li>
                 <li><a href="/project1/profile">Môj profil</a></li>
                 <li><a href="/project1/history">Moja história</a></li>
+                <li><a href="/project1/admin">Administrácia</a></li>
                 <li><a href="/project1/import">Import CSV</a></li>
                 <li><a href="/project1/logout" class="logout-link">Odhlásiť sa</a></li>
             <?php else: ?>

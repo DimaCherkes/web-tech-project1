@@ -21,6 +21,40 @@ class DisciplineRepository
         return $stmt->fetchAll(PDO::FETCH_COLUMN);
     }
 
+    public function findAll(): array {
+        $sql = "SELECT * FROM disciplines ORDER BY name ASC";
+        $stmt = $this->db->query($sql);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function findById(int $id): ?array {
+        $sql = "SELECT * FROM disciplines WHERE id = :id";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([':id' => $id]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $row ?: null;
+    }
+
+    public function updateDiscipline(int $id, string $name, ?string $category = null): bool {
+        $sql = "UPDATE disciplines SET name = :name, category = :category WHERE id = :id";
+        $stmt = $this->db->prepare($sql);
+        return $stmt->execute([
+            ':id' => $id,
+            ':name' => $name,
+            ':category' => $category
+        ]);
+    }
+
+    public function deleteDiscipline(int $id): bool {
+        $sql = "DELETE FROM athlete_medals WHERE discipline_id = :id";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([':id' => $id]);
+
+        $sql = "DELETE FROM disciplines WHERE id = :id";
+        $stmt = $this->db->prepare($sql);
+        return $stmt->execute([':id' => $id]);
+    }
+
     public function findDisciplineId(string $name, ?string $category = null): ?int {
         $sql = "SELECT id FROM disciplines WHERE name = :name AND ";
         if ($category === null) {

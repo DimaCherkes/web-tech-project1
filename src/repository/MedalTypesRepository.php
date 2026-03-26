@@ -14,6 +14,20 @@ class MedalTypesRepository
         $this->db = Database::getConnection();
     }
 
+    public function findAll(): array {
+        $sql = "SELECT * FROM medal_types ORDER BY placing ASC";
+        $stmt = $this->db->query($sql);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function findById(int $id): ?array {
+        $sql = "SELECT * FROM medal_types WHERE id = :id";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([':id' => $id]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $row ?: null;
+    }
+
     public function findMedalTypeIdByPlacing(int $placing): ?int {
         $stmt = $this->db->prepare("SELECT id FROM medal_types WHERE placing = :placing");
         $stmt->execute([':placing' => $placing]);

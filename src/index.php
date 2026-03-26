@@ -35,6 +35,7 @@ use App\Controller\GameController;
 use App\Controller\DisciplineController;
 use App\Controller\ImportController;
 use App\Controller\UserController;
+use App\Controller\AdminController;
 
 // Simple Router
 $requestUri = $_SERVER['REQUEST_URI'];
@@ -91,6 +92,72 @@ if ($path === '/profile') {
 if ($path === '/import') {
     $controller = new ImportController();
     $controller->import();
+    exit;
+}
+
+if ($path === '/admin') {
+    $controller = new AdminController();
+    $controller->index();
+    exit;
+}
+
+// Admin Athlete CRUD
+if ($path === '/admin/athlete/create') {
+    $controller = new AdminController();
+    $controller->createAthlete();
+    exit;
+}
+if ($path === '/admin/athlete/delete') {
+    $controller = new AdminController();
+    $controller->deleteAthlete();
+    exit;
+}
+
+// Admin Country CRUD
+if ($path === '/admin/country/create') {
+    $controller = new AdminController();
+    $controller->createCountry();
+    exit;
+}
+if ($path === '/admin/country/delete') {
+    $controller = new AdminController();
+    $controller->deleteCountry();
+    exit;
+}
+
+// Admin Discipline CRUD
+if ($path === '/admin/discipline/create') {
+    $controller = new AdminController();
+    $controller->createDiscipline();
+    exit;
+}
+if ($path === '/admin/discipline/delete') {
+    $controller = new AdminController();
+    $controller->deleteDiscipline();
+    exit;
+}
+
+// Admin Game CRUD
+if ($path === '/admin/game/create') {
+    $controller = new AdminController();
+    $controller->createGame();
+    exit;
+}
+if ($path === '/admin/game/delete') {
+    $controller = new AdminController();
+    $controller->deleteGame();
+    exit;
+}
+
+// Admin Medal CRUD
+if ($path === '/admin/medal/create') {
+    $controller = new AdminController();
+    $controller->createAthleteMedal();
+    exit;
+}
+if ($path === '/admin/medal/delete') {
+    $controller = new AdminController();
+    $controller->deleteAthleteMedal();
     exit;
 }
 

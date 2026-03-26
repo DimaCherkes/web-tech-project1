@@ -23,6 +23,53 @@ class OlympicGamesRepository
         return $stmt->fetchAll(PDO::FETCH_COLUMN);
     }
 
+    public function findAll(): array {
+        $sql = "SELECT og.*, c.name as country_name 
+                FROM olympic_games og
+                LEFT JOIN countries c ON og.country_id = c.id
+                ORDER BY og.year DESC, og.type ASC";
+        $stmt = $this->db->query($sql);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function findById(int $id): ?array {
+        $sql = "SELECT og.*, c.name as country_name 
+                FROM olympic_games og
+                LEFT JOIN countries c ON og.country_id = c.id
+                WHERE og.id = :id";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([':id' => $id]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $row ?: null;
+    }
+
+    public function updateOlympicGames(int $id, int $year, string $type, string $city, int $countryId): bool {
+        $allowedTypes = ['LOH', 'ZOH'];
+        if (!in_array($type, $allowedTypes)) {
+            throw new \InvalidArgumentException("Invalid game type. Allowed: " . implode(', ', $allowedTypes));
+        }
+
+        $sql = "UPDATE olympic_games SET year = :year, type = :type, city = :city, country_id = :country_id WHERE id = :id";
+        $stmt = $this->db->prepare($sql);
+        return $stmt->execute([
+            ':id' => $id,
+            ':year' => $year,
+            ':type' => $type,
+            ':city' => $city,
+            ':country_id' => $countryId
+        ]);
+    }
+
+    public function deleteOlympicGames(int $id): bool {
+        $sql = "DELETE FROM athlete_medals WHERE olympic_games_id = :id";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([':id' => $id]);
+
+        $sql = "DELETE FROM olympic_games WHERE id = :id";
+        $stmt = $this->db->prepare($sql);
+        return $stmt->execute([':id' => $id]);
+    }
+
     public function findGameId(int $year, string $type, string $city): ?int {
         $sql = "SELECT id FROM olympic_games WHERE year = :year AND type = :type AND city = :city";
         $stmt = $this->db->prepare($sql);
@@ -46,6 +93,30 @@ class OlympicGamesRepository
         $countryId = $this->countryRepository->findCountryId($countryName);
         if (!$countryId) {
             $countryId = $this->countryRepository->insertCountry($countryName);
+        }
+
+        $sql = "INSERT INTO olympic_games (year, type, city, country_id) VALUES (:year, :type, :city, :country_id)";
+        $stmt = $this->db->prepare($sql);
+
+        $stmt->execute([
+            ':year' => $year,
+            ':type' => $type,
+            ':city' => $city,
+            ':country_id' => $countryId
+        ]);
+
+        return (int) $this->db->lastInsertId();
+    }
+
+    public function insertOlympicGamesWithId(int $year, string $type, string $city, int $countryId): int {
+        $allowedTypes = ['LOH', 'ZOH'];
+        if (!in_array($type, $allowedTypes)) {
+            throw new \InvalidArgumentException("Invalid game type. Allowed: " . implode(', ', $allowedTypes));
+        }
+
+        $existingId = $this->findGameId($year, $type, $city);
+        if ($existingId) {
+            return $existingId;
         }
 
         $sql = "INSERT INTO olympic_games (year, type, city, country_id) VALUES (:year, :type, :city, :country_id)";
