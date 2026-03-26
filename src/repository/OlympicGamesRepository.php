@@ -32,6 +32,26 @@ class OlympicGamesRepository
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
+    public function findAllPageable(int $page = 1, int $pageSize = 10): array {
+        $offset = ($page - 1) * $pageSize;
+        $sql = "SELECT og.*, c.name as country_name 
+                FROM olympic_games og
+                LEFT JOIN countries c ON og.country_id = c.id
+                ORDER BY og.year DESC, og.type ASC
+                LIMIT :limit OFFSET :offset";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindValue(':limit', $pageSize, PDO::PARAM_INT);
+        $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function count(): int {
+        $sql = "SELECT COUNT(*) FROM olympic_games";
+        $stmt = $this->db->query($sql);
+        return (int) $stmt->fetchColumn();
+    }
+
     public function findById(int $id): ?array {
         $sql = "SELECT og.*, c.name as country_name 
                 FROM olympic_games og
@@ -43,7 +63,7 @@ class OlympicGamesRepository
         return $row ?: null;
     }
 
-    public function updateOlympicGames(int $id, int $year, string $type, string $city, int $countryId): bool {
+    public function update(int $id, int $year, string $type, string $city, int $countryId): bool {
         $allowedTypes = ['LOH', 'ZOH'];
         if (!in_array($type, $allowedTypes)) {
             throw new \InvalidArgumentException("Invalid game type. Allowed: " . implode(', ', $allowedTypes));
@@ -60,7 +80,7 @@ class OlympicGamesRepository
         ]);
     }
 
-    public function deleteOlympicGames(int $id): bool {
+    public function delete(int $id): bool {
         $sql = "DELETE FROM athlete_medals WHERE olympic_games_id = :id";
         $stmt = $this->db->prepare($sql);
         $stmt->execute([':id' => $id]);

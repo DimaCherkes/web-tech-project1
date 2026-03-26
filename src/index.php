@@ -179,16 +179,24 @@ if ($idMatches = matchRoute('/api/discipline/{id}', $path)) {
 }
 
 // OLYMPIC GAMES
-if ($path === '/api/games') {
-    $controller = new AdminController();
-    if ($method === 'POST') $controller->createGame();
+if ($path === '/api/allOlympicGames') {
+    $controller = new GameController();
+    if ($method === 'GET') $controller->getAll();           // OK
     exit;
 }
-if ($idMatches = matchRoute('/api/games/{id}', $path)) {
-    $controller = new AdminController();
+
+if ($path === '/api/createOlympicGame') {
+    $controller = new GameController();
+    if ($method === 'POST') $controller->create();          // OK; method with auth
+    exit;
+}
+
+if ($idMatches = matchRoute('/api/olympicGame/{id}', $path)) {
+    $controller = new GameController();
     $id = (int)$idMatches[0];
-    if ($method === 'PUT') $controller->updateGame($id);
-    if ($method === 'DELETE') $controller->deleteGame($id);
+    if ($method === 'GET') $controller->getById($id);           // OK
+    if ($method === 'PUT') $controller->update($id);            // OK; method with auth
+    if ($method === 'DELETE') $controller->delete($id);         // OK; method with auth
     exit;
 }
 
