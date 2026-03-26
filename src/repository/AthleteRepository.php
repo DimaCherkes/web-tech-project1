@@ -250,6 +250,39 @@ class AthleteRepository {
         return $stmt->fetchAll();
     }
 
+    public function insertAthleteWithIds(
+        string $firstName,
+        string $lastName,
+        ?string $birthDate = null,
+        ?string $birthPlace = null,
+        ?int $birthCountryId = null,
+        ?string $deathDate = null,
+        ?string $deathPlace = null,
+        ?int $deathCountryId = null
+    ): int {
+        $sql = "INSERT INTO athletes
+            (first_name, last_name, birth_date, birth_place, birth_country_id,
+             death_date, death_place, death_country_id)
+            VALUES
+            (:first_name, :last_name, :birth_date, :birth_place, :birth_country_id,
+             :death_date, :death_place, :death_country_id)";
+
+        $stmt = $this->db->prepare($sql);
+
+        $stmt->execute([
+            ':first_name' => $firstName,
+            ':last_name' => $lastName,
+            ':birth_date' => $birthDate,
+            ':birth_place' => $birthPlace,
+            ':birth_country_id' => $birthCountryId,
+            ':death_date' => $deathDate,
+            ':death_place' => $deathPlace,
+            ':death_country_id' => $deathCountryId
+        ]);
+
+        return (int) $this->db->lastInsertId();
+    }
+
     public function insertAthlete(
         string $firstName,
         string $lastName,
@@ -304,7 +337,7 @@ class AthleteRepository {
         return (int) $this->db->lastInsertId();
     }
 
-    private function findAthleteId(string $firstName, string $lastName): ?int {
+    public function findAthleteId(string $firstName, string $lastName): ?int {
         $sql = "SELECT id FROM athletes WHERE first_name = :first_name AND last_name = :last_name";
         $stmt = $this->db->prepare($sql);
         $stmt->execute([':first_name' => $firstName, ':last_name' => $lastName]);

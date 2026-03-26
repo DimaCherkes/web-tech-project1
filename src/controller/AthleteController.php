@@ -18,9 +18,9 @@ class AthleteController
     }
 
     /**
-     * GET /api/athletes
+     * GET /api/allAthletes
      */
-    public function index(): void
+    public function getAllAthletes(): void
     {
         header('Content-Type: application/json; charset=utf-8');
 
@@ -80,18 +80,35 @@ class AthleteController
     }
 
     /**
-     * GET /api/athlete?id=...
+     * POST /api/athletes
      */
-    public function getAthlete(): void
+    public function createAthlete(): void
     {
         header('Content-Type: application/json; charset=utf-8');
-
-        $id = (int)($_GET['id'] ?? 0);
-        if ($id <= 0) {
-            http_response_code(400);
-            echo json_encode(['error' => 'Invalid ID']);
-            return;
+        
+        $data = $this->getRequestData();
+        
+        try {
+            $id = $this->athleteService->createAthlete($data);
+            if ($id > 0) {
+                http_response_code(201);
+                echo json_encode(['id' => $id, 'message' => 'Athlete created successfully']);
+            } else {
+                http_response_code(409);
+                echo json_encode(['error' => 'Athlete already exists']);
+            }
+        } catch (\Throwable $e) {
+            http_response_code(500);
+            echo json_encode(['error' => 'Internal Server Error', 'message' => $e->getMessage()]);
         }
+    }
+
+    /**
+     * GET /api/athletes/{id}
+     */
+    public function getAthleteDetails(int $id): void
+    {
+        header('Content-Type: application/json; charset=utf-8');
 
         try {
             $athlete = $this->athleteService->getAthleteById($id);
@@ -103,9 +120,63 @@ class AthleteController
 
             echo json_encode(['data' => $athlete->toArray()], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
         } catch (\Throwable $e) {
-            Logger::error("Error in AthleteController::getAthlete", $e);
             http_response_code(500);
             echo json_encode(['error' => 'Internal Server Error']);
         }
+    }
+
+    /**
+     * PUT /api/athletes/{id}
+     */
+    public function update(int $id): void
+    {
+        header('Content-Type: application/json; charset=utf-8');
+        
+        $data = $this->getRequestData();
+
+        try {
+            $success = $this->athleteService->updateAthlete($id, $data);
+            if ($success) {
+                echo json_encode(['message' => 'Athlete updated successfully']);
+            } else {
+                http_response_code(404);
+                echo json_encode(['error' => 'Athlete not found or no changes made']);
+            }
+        } catch (\Throwable $e) {
+            http_response_code(500);
+            echo json_encode(['error' => 'Internal Server Error']);
+        }
+    }
+
+    /**
+     * DELETE /api/athletes/{id}
+     */
+    public function delete(int $id): void
+    {
+        header('Content-Type: application/json; charset=utf-8');
+
+        try {
+            $success = $this->athleteService->deleteAthlete($id);
+            if ($success) {
+                http_response_code(204);
+            } else {
+                http_response_code(404);
+                echo json_encode(['error' => 'Athlete not found']);
+            }
+        } catch (\Throwable $e) {
+            http_response_code(500);
+            echo json_encode(['error' => 'Internal Server Error']);
+        }
+    }
+
+    private function getRequestData(): array
+    {
+        $contentType = $_SERVER["CONTENT_TYPE"] ?? '';
+        if (strpos($contentType, "application/json") !== false) {
+            $json = file_get_contents("php://input");
+            $data = json_decode($json, true);
+            return $data ?: [];
+        }
+        return $_POST;
     }
 }

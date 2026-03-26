@@ -21,10 +21,20 @@ class CountryRepository
         return $row ? (int) $row['id'] : null;
     }
 
-    public function findAll(): array {
-        $sql = "SELECT * FROM countries ORDER BY name ASC";
-        $stmt = $this->db->query($sql);
+    public function findAll(int $page = 1, int $pageSize = 10): array {
+        $offset = ($page - 1) * $pageSize;
+        $sql = "SELECT * FROM countries ORDER BY name ASC LIMIT :limit OFFSET :offset";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindValue(':limit', $pageSize, PDO::PARAM_INT);
+        $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+        $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function count(): int {
+        $sql = "SELECT COUNT(*) FROM countries";
+        $stmt = $this->db->query($sql);
+        return (int) $stmt->fetchColumn();
     }
 
     public function findById(int $id): ?array {

@@ -36,164 +36,196 @@ use App\Controller\DisciplineController;
 use App\Controller\ImportController;
 use App\Controller\UserController;
 use App\Controller\AdminController;
+use App\Controller\CountryController;
 
-// Simple Router
+// Simple REST Router
+$method = $_SERVER['REQUEST_METHOD'];
 $requestUri = $_SERVER['REQUEST_URI'];
-$scriptName = $_SERVER['SCRIPT_NAME']; // e.g., /project1/index.php
-$basePath = dirname($scriptName);      // e.g., /project1
+$scriptName = $_SERVER['SCRIPT_NAME'];
+$basePath = dirname($scriptName);
 
 $path = parse_url($requestUri, PHP_URL_PATH);
-
-// Remove base path from the URL path for routing
 if ($basePath !== '/' && $basePath !== '\\' && strpos($path, $basePath) === 0) {
     $path = substr($path, strlen($basePath));
 }
-
-// Normalize path: ensure it starts with / and has no trailing slash (except for root)
 $path = '/' . ltrim($path, '/');
-if ($path !== '/') {
-    $path = rtrim($path, '/');
+if ($path !== '/') $path = rtrim($path, '/');
+
+// Helper for dynamic routes like /api/athletes/123
+function matchRoute($pattern, $path) {
+    $pattern = preg_replace('/\{[a-zA-Z0-9_]+\}/', '([a-zA-Z0-9_]+)', $pattern);
+    $pattern = "#^" . $pattern . "$#";
+    if (preg_match($pattern, $path, $matches)) {
+        array_shift($matches);
+        return $matches;
+    }
+    return false;
 }
 
-// Simple path matching
+// --- PUBLIC VIEW ROUTES ---
 if ($path === '/' || $path === '/index.php') {
-    if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
-        http_response_code(405);
-        exit;
-    }
     require __DIR__ . '/view/index.php';
     exit;
 }
 
-if ($path === '/register') {
-    $controller = new UserController();
-    $controller->register();
+if ($path === '/athlete') {
+    require __DIR__ . '/view/athlete.php';
     exit;
 }
 
+// --- AUTH ROUTES ---
 if ($path === '/login') {
     $controller = new UserController();
     $controller->login();
     exit;
 }
-
-if ($path === '/history') {
+if ($path === '/register') {
     $controller = new UserController();
-    $controller->history();
+    $controller->register();
     exit;
 }
-
-if ($path === '/profile') {
-    $controller = new UserController();
-    $controller->profile();
-    exit;
-}
-
-if ($path === '/import') {
-    $controller = new ImportController();
-    $controller->import();
-    exit;
-}
-
-if ($path === '/admin') {
-    $controller = new AdminController();
-    $controller->index();
-    exit;
-}
-
-// Admin Athlete CRUD
-if ($path === '/admin/athlete/create') {
-    $controller = new AdminController();
-    $controller->createAthlete();
-    exit;
-}
-if ($path === '/admin/athlete/delete') {
-    $controller = new AdminController();
-    $controller->deleteAthlete();
-    exit;
-}
-
-// Admin Country CRUD
-if ($path === '/admin/country/create') {
-    $controller = new AdminController();
-    $controller->createCountry();
-    exit;
-}
-if ($path === '/admin/country/delete') {
-    $controller = new AdminController();
-    $controller->deleteCountry();
-    exit;
-}
-
-// Admin Discipline CRUD
-if ($path === '/admin/discipline/create') {
-    $controller = new AdminController();
-    $controller->createDiscipline();
-    exit;
-}
-if ($path === '/admin/discipline/delete') {
-    $controller = new AdminController();
-    $controller->deleteDiscipline();
-    exit;
-}
-
-// Admin Game CRUD
-if ($path === '/admin/game/create') {
-    $controller = new AdminController();
-    $controller->createGame();
-    exit;
-}
-if ($path === '/admin/game/delete') {
-    $controller = new AdminController();
-    $controller->deleteGame();
-    exit;
-}
-
-// Admin Medal CRUD
-if ($path === '/admin/medal/create') {
-    $controller = new AdminController();
-    $controller->createAthleteMedal();
-    exit;
-}
-if ($path === '/admin/medal/delete') {
-    $controller = new AdminController();
-    $controller->deleteAthleteMedal();
-    exit;
-}
-
 if ($path === '/logout') {
     $controller = new UserController();
     $controller->logout();
     exit;
 }
-
+if ($path === '/profile') {
+    $controller = new UserController();
+    $controller->profile();
+    exit;
+}
+if ($path === '/history') {
+    $controller = new UserController();
+    $controller->history();
+    exit;
+}
 if ($path === '/auth/google') {
     $controller = new UserController();
     $controller->googleLogin();
     exit;
 }
-
 if ($path === '/oauth2callback.php' || $path === '/google-callback') {
     $controller = new UserController();
     $controller->googleCallback();
     exit;
 }
 
-if ($path === '/athlete' || $path === '/athlete.php') {
-    if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
-        http_response_code(405);
-        exit;
-    }
-    require __DIR__ . '/view/athlete.php';
+// --- API ROUTES ---
+
+// ATHLETES
+if ($path === '/api/allAthletes') {
+    $controller = new AthleteController();
+    if ($method === 'GET') $controller->getAllAthletes();            // OK
+    exit;
+}
+
+if ($path === '/api/createAthlete') {
+    $controller = new AthleteController();
+    if ($method === 'POST') $controller->createAthlete();          // OK
+    exit;
+}
+
+if ($idMatches = matchRoute('/api/athletes/{id}', $path)) {
+    $controller = new AthleteController();
+    $id = (int)$idMatches[0];
+    if ($method === 'GET') $controller->getAthleteDetails($id);         // OK
+    if ($method === 'PUT') $controller->update($id);                    // OK
+    if ($method === 'DELETE') $controller->delete($id);                 // OK
+    exit;
+}
+
+// COUNTRIES
+if ($path === '/api/countries') {
+    $controller = new AdminController();
+    if ($method === 'POST') $controller->createCountry();
+    exit;
+}
+
+if ($path === '/api/allCountries') {
+    $controller = new CountryController();
+    if ($method === 'GET') $controller->getAllCountries();  // OK
+    exit;
+}
+
+if ($idMatches = matchRoute('/api/countries/{id}', $path)) {
+    $controller = new AdminController();
+    $id = (int)$idMatches[0];
+    if ($method === 'PUT') $controller->updateCountry($id);
+    if ($method === 'DELETE') $controller->deleteCountry($id);
+    exit;
+}
+
+// DISCIPLINES
+if ($path === '/api/disciplines') {
+    $controller = new AdminController();
+    if ($method === 'POST') $controller->createDiscipline();
+    exit;
+}
+if ($idMatches = matchRoute('/api/disciplines/{id}', $path)) {
+    $controller = new AdminController();
+    $id = (int)$idMatches[0];
+    if ($method === 'PUT') $controller->updateDiscipline($id);
+    if ($method === 'DELETE') $controller->deleteDiscipline($id);
+    exit;
+}
+
+// OLYMPIC GAMES
+if ($path === '/api/games') {
+    $controller = new AdminController();
+    if ($method === 'POST') $controller->createGame();
+    exit;
+}
+if ($idMatches = matchRoute('/api/games/{id}', $path)) {
+    $controller = new AdminController();
+    $id = (int)$idMatches[0];
+    if ($method === 'PUT') $controller->updateGame($id);
+    if ($method === 'DELETE') $controller->deleteGame($id);
+    exit;
+}
+
+// MEDALS
+if ($path === '/api/medals') {
+    $controller = new AdminController();
+    if ($method === 'POST') $controller->createAthleteMedal();
+    exit;
+}
+if ($idMatches = matchRoute('/api/medals/{id}', $path)) {
+    $controller = new AdminController();
+    $id = (int)$idMatches[0];
+    if ($method === 'PUT') $controller->updateAthleteMedal($id);
+    if ($method === 'DELETE') $controller->deleteAthleteMedal($id);
+    exit;
+}
+
+// MISC API
+if ($path === '/api/years' && $method === 'GET') {
+    (new GameController())->years();
+    exit;
+}
+if ($path === '/api/categories' && $method === 'GET') {
+    (new DisciplineController())->categories();
+    exit;
+}
+
+// ADMIN / IMPORT (View)
+if ($path === '/admin') {
+    $controller = new AdminController();
+    $controller->index();
+    exit;
+}
+if ($path === '/admin/athlete/edit') {
+    $controller = new AdminController();
+    $controller->editAthlete();
+    exit;
+}
+if ($path === '/import') {
+    $controller = new ImportController();
+    $controller->import();
     exit;
 }
 
 // Serve static files
 if (preg_match('/\.(?:css|js)$/', $path)) {
-    if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
-        http_response_code(405);
-        exit;
-    }
     $file = __DIR__ . $path;
     if (file_exists($file)) {
         $mime = str_ends_with($path, '.css') ? 'text/css' : 'application/javascript';
@@ -203,37 +235,8 @@ if (preg_match('/\.(?:css|js)$/', $path)) {
     }
 }
 
-// API Routes
-if ($path === '/api/athletes' && $_SERVER['REQUEST_METHOD'] === 'GET') {
-    $controller = new AthleteController();
-    $controller->index();
-    exit;
-}
-
-if ($path === '/api/athletesList' && $_SERVER['REQUEST_METHOD'] === 'GET') {
-    $controller = new AthleteController();
-    $controller->athletesList();
-    exit;
-}
-
-if ($path === '/api/athlete' && $_SERVER['REQUEST_METHOD'] === 'GET') {
-    $controller = new AthleteController();
-    $controller->getAthlete();
-    exit;
-}
-
-if ($path === '/api/years' && $_SERVER['REQUEST_METHOD'] === 'GET') {
-    $controller = new GameController();
-    $controller->years();
-    exit;
-}
-
-if ($path === '/api/categories' && $_SERVER['REQUEST_METHOD'] === 'GET') {
-    $controller = new DisciplineController();
-    $controller->categories();
-    exit;
-}
-
 // 404 Not Found
 http_response_code(404);
-echo json_encode(['error' => 'Not Found']);
+header('Content-Type: application/json');
+echo json_encode(['error' => 'Not Found', 'path' => $path, 'method' => $method]);
+

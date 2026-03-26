@@ -97,4 +97,51 @@ class AthleteService {
         
         return new AthleteDetailDTO($athleteData, $participations);
     }
+
+    public function createAthlete(array $data): int
+    {
+        $firstName = $data['firstName'] ?? '';
+        $lastName = $data['lastName'] ?? '';
+
+        // Check for duplicate
+        if ($this->athleteRepository->findAthleteId($firstName, $lastName)) {
+            return 0;
+        }
+
+        return $this->athleteRepository->insertAthleteWithIds(
+            $firstName,
+            $lastName,
+            ($data['birthDate'] ?? '') ?: null,
+            ($data['birthPlace'] ?? '') ?: null,
+            (int)($data['birthCountryId'] ?? 0) ?: null, 
+            ($data['deathDate'] ?? '') ?: null,
+            ($data['deathPlace'] ?? '') ?: null,
+            (int)($data['deathCountryId'] ?? 0) ?: null
+        );
+    }
+
+    public function updateAthlete(int $id, array $data): bool
+    {
+        $existing = $this->athleteRepository->findById($id);
+        if (!$existing) {
+            return false;
+        }
+
+        return $this->athleteRepository->updateAthlete(
+            $id,
+            !empty($data['firstName']) ? $data['firstName'] : $existing['first_name'],
+            !empty($data['lastName']) ? $data['lastName'] : $existing['last_name'],
+            !empty($data['birthDate']) ? $data['birthDate'] : $existing['birth_date'],
+            !empty($data['birthPlace']) ? $data['birthPlace'] : $existing['birth_place'],
+            !empty($data['birthCountryId']) ? (int)$data['birthCountryId'] : $existing['birth_country_id'],
+            !empty($data['deathDate']) ? $data['deathDate'] : $existing['death_date'],
+            !empty($data['deathPlace']) ? $data['deathPlace'] : $existing['death_place'],
+            !empty($data['deathCountryId']) ? (int)$data['deathCountryId'] : $existing['death_country_id']
+        );
+    }
+
+    public function deleteAthlete(int $id): bool
+    {
+        return $this->athleteRepository->deleteAthlete($id);
+    }
 }
