@@ -147,6 +147,17 @@ class UserController
         require __DIR__ . '/../view/history.php';
     }
 
+    private function getRequestData(): array
+    {
+        $contentType = $_SERVER["CONTENT_TYPE"] ?? '';
+        if (strpos($contentType, "application/json") !== false) {
+            $json = file_get_contents("php://input");
+            $data = json_decode($json, true);
+            return $data ?: [];
+        }
+        return $_POST;
+    }
+
     public function profile(): void
     {
         if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
@@ -159,19 +170,20 @@ class UserController
         $success = false;
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            if (isset($_POST['update_profile'])) {
+            $data = $this->getRequestData();
+            if (isset($data['update_profile'])) {
                 $result = $this->userService->updateProfile($userId, [
-                    'firstName' => $_POST['firstName'] ?? '',
-                    'lastName' => $_POST['lastName'] ?? ''
+                    'firstName' => $data['firstName'] ?? '',
+                    'lastName' => $data['lastName'] ?? ''
                 ]);
                 if ($result['success']) {
                     $success = "Profil bol úspešne aktualizovaný.";
-                    $_SESSION['fullName'] = $_POST['firstName'] . ' ' . $_POST['lastName'];
+                    $_SESSION['fullName'] = ($data['firstName'] ?? '') . ' ' . ($data['lastName'] ?? '');
                 } else {
                     $errors = $result['errors'];
                 }
-            } elseif (isset($_POST['change_password'])) {
-                $result = $this->userService->changePassword($userId, $_POST['password'] ?? '', $_POST['password_repeat'] ?? '');
+            } elseif (isset($data['change_password'])) {
+                $result = $this->userService->changePassword($userId, $data['password'] ?? '', $data['password_repeat'] ?? '');
                 if ($result['success']) {
                     $success = "Heslo bolo úspešne zmenené.";
                 } else {

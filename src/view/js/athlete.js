@@ -15,9 +15,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function loadAthleteDetails(id) {
         try {
-            const res = await fetch(`/project1/api/athlete?id=${id}`);
+            // RESTful path: /api/athletes/{id}
+            const res = await fetch(`/project1/api/athletes/${id}`);
             if (!res.ok) throw new Error('Športovec nebol nájdený');
-            
+
             const result = await res.json();
             const a = result.data;
 
@@ -33,9 +34,30 @@ document.addEventListener('DOMContentLoaded', () => {
             `;
 
             renderParticipations(a.participations);
+            setupDeleteButton(id);
         } catch (error) {
             fullNameElem.textContent = 'Chyba';
             personalInfoElem.innerHTML = `<p class="error">${error.message}</p>`;
+        }
+    }
+
+    function setupDeleteButton(id) {
+        const deleteBtn = document.getElementById('deleteBtn');
+        if (deleteBtn) {
+            deleteBtn.addEventListener('click', async (e) => {
+                e.preventDefault();
+                if (!confirm('Naozaj vymazať?')) return;
+
+                const res = await fetch(`/project1/api/athletes/${id}`, {
+                    method: 'DELETE'
+                });
+
+                if (res.status === 204) {
+                    window.location.href = '/project1/';
+                } else {
+                    alert('Chyba pri mazaní.');
+                }
+            });
         }
     }
 

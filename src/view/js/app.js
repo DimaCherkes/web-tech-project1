@@ -97,7 +97,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 year: currentYear
             });
 
-            const res = await fetch(`/project1/api/athletesList?${params.toString()}`);
+            // Use RESTful endpoint
+            const res = await fetch(`/project1/api/athletes?${params.toString()}`);
             const result = await res.json();
 
             renderTable(result.data);

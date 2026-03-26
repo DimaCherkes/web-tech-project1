@@ -37,6 +37,25 @@
                 </tbody>
             </table>
         </section>
+
+        <?php if (isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true): ?>
+            <section class="admin-actions" style="margin-top: 30px; padding: 20px; background: #fdf2f2; border: 1px solid #f8d7da; border-radius: 8px;">
+                <h3 style="margin-top:0">Administratívne akcie</h3>
+                <div style="display: flex; gap: 15px;">
+                    <a href="#" id="editBtn" style="padding: 10px 20px; background: #007bff; color: white; text-decoration: none; border-radius: 5px;">Upraviť športovca</a>
+                    <a href="#" id="deleteBtn" style="padding: 10px 20px; background: #dc3545; color: white; text-decoration: none; border-radius: 5px;" onclick="return confirm('Naozaj vymazať?')">Vymazať športovca</a>
+                </div>
+                
+                <script>
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const athleteId = urlParams.get('id');
+                    if (athleteId) {
+                        document.getElementById('editBtn').href = '/project1/admin/athlete/edit?id=' + athleteId;
+                        document.getElementById('deleteBtn').href = '/project1/admin/athlete/delete?id=' + athleteId;
+                    }
+                </script>
+            </section>
+        <?php endif; ?>
     </main>
 
     <script src="/project1/view/js/athlete.js"></script>
