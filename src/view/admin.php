@@ -122,6 +122,34 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
             align-items: center;
             z-index: 2000;
         }
+
+        /* Notifications */
+        #notificationArea {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .notification {
+            padding: 15px 25px;
+            border-radius: 4px;
+            color: white;
+            font-weight: bold;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+            animation: slideIn 0.3s ease-out;
+            min-width: 250px;
+        }
+        .notification.success { background-color: #28a745; }
+        .notification.error { background-color: #dc3545; }
+        .notification.info { background-color: #007bff; }
+        
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
     </style>
 </head>
 <body>
@@ -129,6 +157,7 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
 
     <main>
         <h1>Administrácia entít</h1>
+        <div id="notificationArea"></div>
 
         <div class="admin-tabs">
             <button class="tab-btn active" onclick="openTab('countries')">Krajiny</button>
@@ -268,10 +297,14 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
                         <select name="discipline_id" id="medalDisciplineSelect" required></select>
                     </div>
                     <div class="form-group">
-                        <label>Umiestnenie (číslo):</label>
-                        <input type="number" name="placing" required min="1" max="100" value="1">
+                        <label>Typ medaily:</label>
+                        <select name="medal_type_id" required>
+                            <option value="1">Zlato (1. miesto)</option>
+                            <option value="2">Striebro (2. miesto)</option>
+                            <option value="3">Bronz (3. miesto)</option>
+                        </select>
                     </div>
-                    <button type="submit">Uložiť medailu</button>
+                    <button type="submit">Priradiť medailu</button>
                 </form>
 
                 <h2>Zoznam medailí</h2>
@@ -280,9 +313,9 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
                         <thead>
                             <tr>
                                 <th>Športovec</th>
-                                <th>Rok/Hry</th>
+                                <th>Hry</th>
                                 <th>Disciplína</th>
-                                <th>Umiestnenie</th>
+                                <th>Medaile</th>
                                 <th>Akcie</th>
                             </tr>
                         </thead>
@@ -295,6 +328,47 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
         <!-- ATHLETES -->
         <div id="athletes" class="tab-content">
             <div class="admin-section">
+                <h2>Pridať nového športovca</h2>
+                <form id="addAthleteForm" class="admin-form">
+                    <div class="form-group">
+                        <label>Meno:</label>
+                        <input type="text" name="firstName" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Priezvisko:</label>
+                        <input type="text" name="lastName" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Dátum narodenia:</label>
+                        <input type="date" name="birthDate">
+                    </div>
+                    <div class="form-group">
+                        <label>Miesto narodenia:</label>
+                        <input type="text" name="birthPlace">
+                    </div>
+                    <div class="form-group">
+                        <label>Krajina narodenia:</label>
+                        <select name="birthCountryId" id="athleteBirthCountrySelect">
+                            <option value="">-- Vyberte krajinu --</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Dátum úmrtia:</label>
+                        <input type="date" name="deathDate">
+                    </div>
+                    <div class="form-group">
+                        <label>Miesto úmrtia:</label>
+                        <input type="text" name="deathPlace">
+                    </div>
+                    <div class="form-group">
+                        <label>Krajina úmrtia:</label>
+                        <select name="deathCountryId" id="athleteDeathCountrySelect">
+                            <option value="">-- Vyberte krajinu --</option>
+                        </select>
+                    </div>
+                    <button type="submit">Vytvoriť športovca</button>
+                </form>
+
                 <h2>Zoznam športovcov</h2>
                 <div class="table-container">
                     <table id="athletesTable">
@@ -340,7 +414,6 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
             document.getElementById(tabId).classList.add('active');
             event.currentTarget.classList.add('active');
             
-            // Trigger data load for the tab if needed
             if (typeof refreshData === 'function') refreshData(tabId);
         }
     </script>

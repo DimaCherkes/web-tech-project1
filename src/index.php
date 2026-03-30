@@ -157,7 +157,7 @@ if ($idMatches = matchRoute('/api/athletes/{id}', $path)) {
     $id = (int)$idMatches[0];
     if ($method === 'GET') $controller->getAthleteDetails($id);
     if ($method === 'PUT') $controller->update($id);
-    if ($method === 'DELETE') $controller->getAthleteDetails($id);
+    if ($method === 'DELETE') $controller->delete($id);
     exit;
 }
 

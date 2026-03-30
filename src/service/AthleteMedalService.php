@@ -2,15 +2,17 @@
 
 namespace App\service;
 
-use App\Dto\AthleteListDTO;
 use App\dto\AthleteMedalDTO;
 use App\repository\AthleteMedalsRepository;
+use App\repository\AthleteRepository;
 
 class AthleteMedalService {
     private AthleteMedalsRepository $repository;
+    private AthleteRepository $athleteRepository;
 
     public function __construct() {
         $this->repository = new AthleteMedalsRepository();
+        $this->athleteRepository = new AthleteRepository();
     }
 
     public function getAll(array $queryParams): array {
@@ -55,7 +57,7 @@ class AthleteMedalService {
 
     public function delete(int $id): bool
     {
-        return $this->repository->delete($id);
+        return $this->athleteRepository->deleteAthlete($id);
     }
 
 }
