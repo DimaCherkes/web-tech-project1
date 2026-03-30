@@ -42,7 +42,21 @@ class GameService
 
     public function create(array $data): int
     {
-        return $this->gameRepository->insertOlympicGames($data['year'], $data['type'], $data['city'], $data['countryName']);
+        if (!empty($data['countryId'])) {
+            return $this->gameRepository->insertOlympicGamesWithId(
+                (int)$data['year'], 
+                $data['type'], 
+                $data['city'], 
+                (int)$data['countryId']
+            );
+        }
+        
+        return $this->gameRepository->insertOlympicGames(
+            (int)$data['year'], 
+            $data['type'], 
+            $data['city'], 
+            $data['countryName'] ?? ''
+        );
     }
 
     public function getById(int $id): ?OlympicGameDTO {

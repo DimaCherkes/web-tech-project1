@@ -33,30 +33,33 @@ async function refreshData(tabId) {
     try {
         const response = await fetch(`${API_PATHS[tabId]}?pageSize=1000`);
         const result = await response.json();
-        const items = result.items || [];
+        
+        // Fix: Support both "items" and "data" keys due to inconsistent API
+        const items = result.items || result.data || [];
+        console.log(`Loaded ${tabId}:`, items);
         
         const tableBody = document.querySelector(`#${tabId}Table tbody`);
-        if (!tableBody) return;
-        tableBody.innerHTML = '';
+        if (tableBody) {
+            tableBody.innerHTML = '';
+            items.forEach(item => {
+                const row = createTableRow(tabId, item);
+                tableBody.appendChild(row);
+            });
+        }
 
-        items.forEach(item => {
-            const row = createTableRow(tabId, item);
-            tableBody.appendChild(row);
-        });
-
-        // After loading countries/disciplines/etc, update dropdowns in other forms
+        // Update dropdowns in forms
         if (tabId === 'countries') updateDropdown('gameCountrySelect', items);
         if (tabId === 'athletes') updateDropdown('medalAthleteSelect', items, a => `${a.firstName} ${a.lastName}`);
         if (tabId === 'games') updateDropdown('medalGameSelect', items, g => `${g.year} ${g.type} (${g.city})`);
         if (tabId === 'disciplines') updateDropdown('medalDisciplineSelect', items, d => `${d.name} (${d.category || '-'})`);
 
-        // If medals tab is loaded, but dropdowns are empty, load them
+        // If medals tab is active, we need to ensure all dropdowns are loaded
         if (tabId === 'medals') {
             loadDropdownsForMedals();
         }
 
     } catch (error) {
-        console.error('Error refreshing data:', error);
+        console.error(`Error refreshing ${tabId}:`, error);
     } finally {
         showLoading(false);
     }
@@ -64,9 +67,14 @@ async function refreshData(tabId) {
 
 async function loadDropdownsForMedals() {
     // Only fetch if they aren't populated
-    if (document.getElementById('medalAthleteSelect').children.length <= 1) refreshData('athletes');
-    if (document.getElementById('medalGameSelect').children.length <= 1) refreshData('games');
-    if (document.getElementById('medalDisciplineSelect').children.length <= 1) refreshData('disciplines');
+    const athleteSelect = document.getElementById('medalAthleteSelect');
+    if (athleteSelect && athleteSelect.children.length <= 1) refreshData('athletes');
+    
+    const gameSelect = document.getElementById('medalGameSelect');
+    if (gameSelect && gameSelect.children.length <= 1) refreshData('games');
+    
+    const disciplineSelect = document.getElementById('medalDisciplineSelect');
+    if (disciplineSelect && disciplineSelect.children.length <= 1) refreshData('disciplines');
 }
 
 function updateDropdown(id, items, textFn = item => item.name) {
@@ -80,7 +88,7 @@ function updateDropdown(id, items, textFn = item => item.name) {
         opt.textContent = textFn(item);
         select.appendChild(opt);
     });
-    select.value = currentValue;
+    if (currentValue) select.value = currentValue;
 }
 
 function createTableRow(tabId, item) {
@@ -93,8 +101,11 @@ function createTableRow(tabId, item) {
     } else if (tabId === 'games') {
         tr.innerHTML = `<td>${item.year}</td><td>${item.type}</td><td>${item.city}</td>`;
     } else if (tabId === 'medals') {
-        tr.innerHTML = `<td>${item.first_name} ${item.last_name}</td><td>${item.year} (${item.medal_name})</td><td>${item.discipline_name}</td><td>${item.placing || '-'}</td>`;
+        // Handle database keys (snake_case)
+        const name = (item.first_name && item.last_name) ? `${item.first_name} ${item.last_name}` : `${item.firstName} ${item.lastName}`;
+        tr.innerHTML = `<td>${name}</td><td>${item.year} (${item.medal_name || item.medalName || '-'})</td><td>${item.discipline_name || item.disciplineName || '-'}</td><td>${item.placing || '-'}</td>`;
     } else if (tabId === 'athletes') {
+        // AthleteDTO uses camelCase
         tr.innerHTML = `<td>${item.id}</td><td>${item.firstName}</td><td>${item.lastName}</td><td>${item.birthDate || '-'}</td>`;
     }
 
@@ -134,16 +145,18 @@ function setupFormListeners() {
             const formData = new FormData(formEl);
             const data = Object.fromEntries(formData.entries());
             
-            // Map some fields to match controller naming if needed
+            // Map fields for Games to match Service expectations
+            if (id === 'addGameForm') {
+                data.countryId = parseInt(data.country_id);
+                delete data.country_id;
+            }
+
+            // Map fields for Medals to match Service expectations
             if (id === 'addMedalForm') {
                 data.athleteId = parseInt(data.athlete_id);
                 data.gameId = parseInt(data.olympic_games_id);
                 data.disciplineId = parseInt(data.discipline_id);
-                data.medalTypeId = parseInt(data.placing); // Assuming placing mapping to ID or use raw ID
-            }
-            if (id === 'addGameForm') {
-                data.countryId = parseInt(data.country_id);
-                data.year = parseInt(data.year);
+                data.medalTypeId = parseInt(data.placing); // Placed in placing input but should be ID
             }
 
             try {
@@ -161,6 +174,7 @@ function setupFormListeners() {
                     alert('Chyba: ' + (err.error || 'Neznáma chyba'));
                 }
             } catch (error) {
+                console.error('Submit error:', error);
                 alert('Chyba pripojenia.');
             }
         });
@@ -178,7 +192,8 @@ async function deleteItem(tabId, id) {
             alert('Zmazané.');
             refreshData(tabId);
         } else {
-            alert('Chyba pri mazaní.');
+            const err = await res.json();
+            alert('Chyba pri mazaní: ' + (err.error || 'Neznáma chyba'));
         }
     } catch (error) {
         alert('Chyba pripojenia.');
@@ -190,17 +205,12 @@ let currentEditId = null;
 
 async function openEditModal(tabId, item) {
     currentEditTab = tabId;
-    currentEditId = item.id || item.year; // Games might use year or ID, usually ID for DELETE/PUT
-    
-    // Most entities have ID. Let's check Game DTO/Controller
-    // GameController update takes $id. Let's assume item.id exists
-    if (tabId === 'games') currentEditId = item.id;
+    currentEditId = item.id;
 
     document.getElementById('modalTitle').textContent = `Upraviť ${tabId}`;
     const fieldsContainer = document.getElementById('editFields');
     fieldsContainer.innerHTML = '';
     
-    // Create fields based on tabId
     if (tabId === 'countries') {
         fieldsContainer.appendChild(createField('name', 'Názov', item.name));
         fieldsContainer.appendChild(createField('code', 'Kód', item.code));
@@ -215,8 +225,6 @@ async function openEditModal(tabId, item) {
         fieldsContainer.appendChild(createField('firstName', 'Meno', item.firstName));
         fieldsContainer.appendChild(createField('lastName', 'Priezvisko', item.lastName));
         fieldsContainer.appendChild(createField('birthDate', 'Dátum narodenia', item.birthDate, 'date'));
-    } else if (tabId === 'medals') {
-        fieldsContainer.appendChild(createField('medalTypeId', 'Medal Type ID', item.medal_type_id, 'number'));
     }
 
     document.getElementById('editModal').style.display = 'block';
@@ -238,9 +246,7 @@ document.getElementById('editForm').addEventListener('submit', async (e) => {
     const formData = new FormData(e.target);
     const data = Object.fromEntries(formData.entries());
     
-    // Number conversions
     if (data.year) data.year = parseInt(data.year);
-    if (data.medalTypeId) data.medalTypeId = parseInt(data.medalTypeId);
 
     try {
         const res = await fetch(`${CRUD_PATHS[currentEditTab]}${currentEditId}`, {
@@ -253,14 +259,14 @@ document.getElementById('editForm').addEventListener('submit', async (e) => {
             closeModal();
             refreshData(currentEditTab);
         } else {
-            alert('Chyba pri aktualizácii.');
+            const err = await res.json();
+            alert('Chyba pri aktualizácii: ' + (err.error || 'Neznáма ошибка'));
         }
     } catch (error) {
         alert('Chyba pripojenia.');
     }
 });
 
-// Close modal when clicking outside
 window.onclick = function(event) {
     if (event.target == document.getElementById('editModal')) {
         closeModal();
