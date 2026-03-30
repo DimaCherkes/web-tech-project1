@@ -163,6 +163,35 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
             from { transform: translateX(100%); opacity: 0; }
             to { transform: translateX(0); opacity: 1; }
         }
+
+        /* Bulk Athlete Rows */
+        .athlete-bulk-row {
+            background: #fff;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            position: relative;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+        }
+        .remove-row-btn {
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            background: #dc3545;
+            color: white;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            border: none;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
@@ -370,48 +399,19 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
         <!-- ATHLETES -->
         <div id="athletes" class="tab-content">
             <div class="admin-section">
-                <h2>Pridať nového športovca</h2>
-                <form id="addAthleteForm" class="admin-form">
-                    <div class="form-group">
-                        <label>Meno:</label>
-                        <input type="text" name="firstName" required>
+                <h2>Pridať športovcov (hromadne)</h2>
+                <form id="addAthleteForm">
+                    <div id="athletesRowsContainer">
+                        <!-- Rows added via JS -->
                     </div>
-                    <div class="form-group">
-                        <label>Priezvisko:</label>
-                        <input type="text" name="lastName" required>
+                    
+                    <div style="margin-top: 15px; display: flex; gap: 10px;">
+                        <button type="button" id="addMoreAthletesBtn" class="btn-sm" style="background: #6c757d;">+ Pridať ďalšieho športovca</button>
+                        <button type="submit" class="btn-sm btn-primary">Uložiť všetkých športovcov</button>
                     </div>
-                    <div class="form-group">
-                        <label>Dátum narodenia:</label>
-                        <input type="date" name="birthDate">
-                    </div>
-                    <div class="form-group">
-                        <label>Miesto narodenia:</label>
-                        <input type="text" name="birthPlace">
-                    </div>
-                    <div class="form-group">
-                        <label>Krajina narodenia:</label>
-                        <select name="birthCountryId" id="athleteBirthCountrySelect">
-                            <option value="">-- Vyberte krajinu --</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>Dátum úmrtia:</label>
-                        <input type="date" name="deathDate">
-                    </div>
-                    <div class="form-group">
-                        <label>Miesto úmrtia:</label>
-                        <input type="text" name="deathPlace">
-                    </div>
-                    <div class="form-group">
-                        <label>Krajina úmrtia:</label>
-                        <select name="deathCountryId" id="athleteDeathCountrySelect">
-                            <option value="">-- Vyberte krajinu --</option>
-                        </select>
-                    </div>
-                    <button type="submit">Vytvoriť športovca</button>
                 </form>
 
-                <h2>Zoznam športovcov</h2>
+                <h2 style="margin-top: 40px;">Zoznam športovcov</h2>
 
                 <div class="filters-container">
                     <div class="form-group">

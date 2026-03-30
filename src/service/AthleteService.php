@@ -98,8 +98,13 @@ class AthleteService {
         return new AthleteDetailDTO($athleteData, $participations);
     }
 
-    public function createAthlete(array $data): int
+    public function createAthlete(array $data): array|int
     {
+        // Detect if input is an array of objects for bulk insert
+        if (isset($data[0]) && is_array($data[0])) {
+            return $this->athleteRepository->insertAthletesBulk($data);
+        }
+
         $firstName = $data['firstName'] ?? '';
         $lastName = $data['lastName'] ?? '';
 

@@ -43,6 +43,11 @@ const medalTranslations = {
 document.addEventListener('DOMContentLoaded', () => {
     refreshData('countries');
     setupFormListeners();
+    
+    // Initialize first athlete row
+    addAthleteRow();
+    
+    document.getElementById('addMoreAthletesBtn').onclick = addAthleteRow;
 });
 
 function showNotification(message, type = 'success') {
@@ -60,7 +65,7 @@ function showNotification(message, type = 'success') {
         note.style.transform = 'translateX(100%)';
         note.style.transition = 'all 0.3s ease-in';
         setTimeout(() => note.remove(), 300);
-    }, 4000);
+    }, 5000);
 }
 
 function showLoading(show) {
@@ -72,13 +77,11 @@ async function refreshData(tabId) {
     try {
         let url = `${API_PATHS[tabId]}?pageSize=1000`;
         
-        // Add Filters to URL
         if (tabId === 'medals') {
             const type = document.getElementById('filterMedalType').value;
             const year = document.getElementById('filterMedalYear').value;
             const medalId = document.getElementById('filterMedalId').value;
             const discId = document.getElementById('filterMedalDiscipline').value;
-            
             if (type) url += `&type=${encodeURIComponent(type)}`;
             if (year) url += `&year=${encodeURIComponent(year)}`;
             if (medalId) url += `&medal_type_id=${encodeURIComponent(medalId)}`;
@@ -146,8 +149,16 @@ async function loadDropdownsForMedals() {
 function updateAllDropdowns() {
     if (allCountries.length > 0) {
         updateDropdown('gameCountrySelect', allCountries);
-        updateDropdown('athleteBirthCountrySelect', allCountries);
-        updateDropdown('athleteDeathCountrySelect', allCountries);
+        // Also update all country selects in the bulk rows
+        document.querySelectorAll('.country-select').forEach(sel => {
+            const current = sel.value;
+            sel.innerHTML = '<option value="">-- Krajina --</option>';
+            allCountries.forEach(c => {
+                const opt = new Option(c.name, c.id);
+                if (c.id == current) opt.selected = true;
+                sel.appendChild(opt);
+            });
+        });
     }
     if (allAthletes.length > 0) {
         updateDropdown('medalAthleteSelect', allAthletes, a => `${a.firstName || a.first_name} ${a.lastName || a.last_name}`);
@@ -162,7 +173,6 @@ function updateAllDropdowns() {
 
     const medalTypeSelect = document.querySelector('select[name="medal_type_id"]');
     const filterMedalId = document.getElementById('filterMedalId');
-    
     if (Object.keys(medalTypesMap).length > 0) {
         [medalTypeSelect, filterMedalId].forEach(sel => {
             if (!sel) return;
@@ -198,7 +208,6 @@ function updateDropdown(id, items, textFn = item => item.name) {
 
 function createTableRow(tabId, item) {
     const tr = document.createElement('tr');
-    
     if (tabId === 'countries') {
         tr.innerHTML = `<td>${item.id}</td><td>${item.name}</td><td>${item.code || '-'}</td>`;
     } else if (tabId === 'disciplines') {
@@ -216,22 +225,50 @@ function createTableRow(tabId, item) {
 
     const actionsTd = document.createElement('td');
     actionsTd.className = 'action-btns';
-    
     const editBtn = document.createElement('button');
     editBtn.textContent = 'Upraviť';
     editBtn.className = 'btn-sm btn-warning';
     editBtn.onclick = () => openEditModal(tabId, item);
-    
     const deleteBtn = document.createElement('button');
     deleteBtn.textContent = 'Zmazať';
     deleteBtn.className = 'btn-sm btn-danger';
     deleteBtn.onclick = () => deleteItem(tabId, item.id);
-    
     actionsTd.appendChild(editBtn);
     actionsTd.appendChild(deleteBtn);
     tr.appendChild(actionsTd);
-    
     return tr;
+}
+
+function addAthleteRow() {
+    const container = document.getElementById('athletesRowsContainer');
+    const row = document.createElement('div');
+    row.className = 'athlete-bulk-row';
+    
+    // Only show remove button if more than 1 row
+    const showRemove = container.children.length > 0;
+    
+    row.innerHTML = `
+        ${showRemove ? '<button type="button" class="remove-row-btn" onclick="this.parentElement.remove()">×</button>' : ''}
+        <div class="form-group"><input type="text" name="firstName" placeholder="Meno" required></div>
+        <div class="form-group"><input type="text" name="lastName" placeholder="Priezvisko" required></div>
+        <div class="form-group"><input type="date" name="birthDate" title="Dátum narodenia"></div>
+        <div class="form-group"><input type="text" name="birthPlace" placeholder="Miesto nar."></div>
+        <div class="form-group">
+            <select name="birthCountryId" class="country-select">
+                <option value="">-- Krajina nar. --</option>
+            </select>
+        </div>
+        <div class="form-group"><input type="date" name="deathDate" title="Dátum úmrtia"></div>
+        <div class="form-group"><input type="text" name="deathPlace" placeholder="Miesto úmr."></div>
+        <div class="form-group">
+            <select name="deathCountryId" class="country-select">
+                <option value="">-- Krajina úmr. --</option>
+            </select>
+        </div>
+    `;
+    
+    container.appendChild(row);
+    updateAllDropdowns(); // Fill the newly added country selects
 }
 
 function setupFormListeners() {
@@ -239,8 +276,7 @@ function setupFormListeners() {
         addCountryForm: { url: CRUD_PATHS.createCountry, tab: 'countries' },
         addDisciplineForm: { url: CRUD_PATHS.createDiscipline, tab: 'disciplines' },
         addGameForm: { url: CRUD_PATHS.createGame, tab: 'games' },
-        addMedalForm: { url: CRUD_PATHS.createMedal, tab: 'medals' },
-        addAthleteForm: { url: CRUD_PATHS.createAthlete, tab: 'athletes' }
+        addMedalForm: { url: CRUD_PATHS.createMedal, tab: 'medals' }
     };
 
     Object.keys(forms).forEach(id => {
@@ -250,26 +286,8 @@ function setupFormListeners() {
             e.preventDefault();
             const formData = new FormData(formEl);
             const data = Object.fromEntries(formData.entries());
-            
-            if (id === 'addGameForm') {
-                data.countryId = parseInt(data.country_id);
-                delete data.country_id;
-            }
-
-            if (id === 'addMedalForm') {
-                data.athleteId = parseInt(data.athlete_id);
-                data.gameId = parseInt(data.olympic_games_id);
-                data.disciplineId = parseInt(data.discipline_id);
-                data.medalTypeId = parseInt(data.medal_type_id);
-            }
-
-            if (id === 'addAthleteForm') {
-                if (data.birthCountryId) data.birthCountryId = parseInt(data.birthCountryId);
-                if (data.deathCountryId) data.deathCountryId = parseInt(data.deathCountryId);
-                ['birthDate', 'deathDate', 'birthPlace', 'deathPlace'].forEach(key => {
-                    if (!data[key]) data[key] = null;
-                });
-            }
+            if (id === 'addGameForm') { data.countryId = parseInt(data.country_id); delete data.country_id; }
+            if (id === 'addMedalForm') { data.athleteId = parseInt(data.athlete_id); data.gameId = parseInt(data.olympic_games_id); data.disciplineId = parseInt(data.discipline_id); data.medalTypeId = parseInt(data.medal_type_id); }
 
             try {
                 const res = await fetch(forms[id].url, {
@@ -277,37 +295,73 @@ function setupFormListeners() {
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(data)
                 });
-                if (res.ok) {
-                    showNotification('Záznam úspešne pridaný.');
-                    formEl.reset();
-                    refreshData(forms[id].tab);
-                } else {
-                    const err = await res.json();
-                    showNotification('Chyba: ' + (err.error || 'Neznáma chyba'), 'error');
-                }
-            } catch (error) {
-                showNotification('Chyba pripojenia k serveru.', 'error');
-            }
+                if (res.ok) { showNotification('Záznam úspešne pridaný.'); formEl.reset(); refreshData(forms[id].tab); }
+                else { const err = await res.json(); showNotification('Chyba: ' + (err.error || 'Neznáma chyba'), 'error'); }
+            } catch (error) { showNotification('Chyba pripojenia.', 'error'); }
         });
     });
+
+    // Special handler for bulk Athlete form
+    const athleteForm = document.getElementById('addAthleteForm');
+    if (athleteForm) {
+        athleteForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const rows = document.querySelectorAll('.athlete-bulk-row');
+            const athletesData = [];
+
+            rows.forEach(row => {
+                const athlete = {};
+                row.querySelectorAll('input, select').forEach(input => {
+                    let val = input.value || null;
+                    if (input.name.includes('Id') && val) val = parseInt(val);
+                    athlete[input.name] = val;
+                });
+                if (athlete.firstName && athlete.lastName) athletesData.push(athlete);
+            });
+
+            if (athletesData.length === 0) return;
+
+            try {
+                showLoading(true);
+                const res = await fetch(CRUD_PATHS.createAthlete, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(athletesData)
+                });
+                const result = await res.json();
+                
+                if (res.ok) {
+                    if (result.results) {
+                        const s = result.results;
+                        const msg = `Vytvorených: ${s.ids.length}. Chyby: ${s.errors.length}`;
+                        showNotification(msg, s.errors.length > 0 ? 'info' : 'success');
+                        if (s.errors.length > 0) s.errors.forEach(err => console.warn(err));
+                    } else {
+                        showNotification('Športovci úspešne pridaní.');
+                    }
+                    // Reset form: keep 1 empty row
+                    document.getElementById('athletesRowsContainer').innerHTML = '';
+                    addAthleteRow();
+                    refreshData('athletes');
+                } else {
+                    showNotification('Chyba: ' + (result.error || 'Nastala chyba'), 'error');
+                }
+            } catch (error) {
+                showNotification('Chyba pripojenia.', 'error');
+            } finally {
+                showLoading(false);
+            }
+        });
+    }
 }
 
 async function deleteItem(tabId, id) {
     if (!confirm('Naozaj chcete zmazať tento záznam?')) return;
-    
     try {
-        const res = await fetch(`${CRUD_PATHS[tabId]}${id}`, {
-            method: 'DELETE'
-        });
-        if (res.status === 204 || res.ok) {
-            showNotification('Záznam bol zmazaný.');
-            refreshData(tabId);
-        } else {
-            showNotification('Chyba pri mazaní záznamu.', 'error');
-        }
-    } catch (error) {
-        showNotification('Chyba pripojenia.', 'error');
-    }
+        const res = await fetch(`${CRUD_PATHS[tabId]}${id}`, { method: 'DELETE' });
+        if (res.status === 204 || res.ok) { showNotification('Záznam bol zmazaný.'); refreshData(tabId); }
+        else { showNotification('Chyba pri mazaní záznamu.', 'error'); }
+    } catch (error) { showNotification('Chyba pripojenia.', 'error'); }
 }
 
 let currentEditTab = '';
@@ -316,7 +370,6 @@ let currentEditId = null;
 async function openEditModal(tabId, item) {
     currentEditTab = tabId;
     currentEditId = item.id;
-
     document.getElementById('modalTitle').textContent = `Upraviť ${tabTitles[tabId] || tabId}`;
     const fieldsContainer = document.getElementById('editFields');
     fieldsContainer.innerHTML = '';
@@ -344,17 +397,11 @@ async function openEditModal(tabId, item) {
         fieldsContainer.appendChild(createSelectField('athleteId', 'Športovec', allAthletes, item.athlete_id || item.athleteId, a => `${a.firstName || a.first_name} ${a.lastName || a.last_name}`));
         fieldsContainer.appendChild(createSelectField('gameId', 'Hry', allGames, item.olympic_games_id || item.gameId, g => `${g.year} ${g.type} (${g.city})`));
         fieldsContainer.appendChild(createSelectField('disciplineId', 'Disciplína', allDisciplines, item.discipline_id || item.disciplineId, d => `${d.name} (${d.category || '-'})`));
-        
         const currentMedalId = item.medal_type_id || item.medalId;
         const medalOptions = [];
-        ['Gold', 'Silver', 'Bronze'].forEach(type => {
-            if (medalTypesMap[type]) {
-                medalOptions.push({id: medalTypesMap[type], name: medalTranslations[type]});
-            }
-        });
+        ['Gold', 'Silver', 'Bronze'].forEach(type => { if (medalTypesMap[type]) medalOptions.push({id: medalTypesMap[type], name: medalTranslations[type]}); });
         fieldsContainer.appendChild(createSelectField('medalTypeId', 'Typ medaily', medalOptions, currentMedalId));
     }
-
     document.getElementById('editModal').style.display = 'block';
 }
 
@@ -368,17 +415,14 @@ function createField(name, label, value, type = 'text') {
 function createSelectField(name, label, items, currentValue, textFn = item => item.name) {
     const div = document.createElement('div');
     div.className = 'form-group';
-    
     const labelEl = document.createElement('label');
     labelEl.textContent = `${label}:`;
     div.appendChild(labelEl);
-    
     const select = document.createElement('select');
     select.name = name;
     select.className = 'form-group select';
     select.style.width = '100%';
     select.innerHTML = '<option value="">-- Vyberte --</option>';
-    
     items.forEach(item => {
         const opt = document.createElement('option');
         opt.value = item.id;
@@ -386,20 +430,16 @@ function createSelectField(name, label, items, currentValue, textFn = item => it
         if (item.id == currentValue) opt.selected = true;
         select.appendChild(opt);
     });
-    
     div.appendChild(select);
     return div;
 }
 
-function closeModal() {
-    document.getElementById('editModal').style.display = 'none';
-}
+function closeModal() { document.getElementById('editModal').style.display = 'none'; }
 
 document.getElementById('editForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const formData = new FormData(e.target);
     const data = Object.fromEntries(formData.entries());
-    
     if (data.year) data.year = parseInt(data.year);
     if (data.birthCountryId) data.birthCountryId = parseInt(data.birthCountryId) || null;
     if (data.deathCountryId) data.deathCountryId = parseInt(data.deathCountryId) || null;
@@ -414,21 +454,9 @@ document.getElementById('editForm').addEventListener('submit', async (e) => {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data)
         });
-        if (res.ok) {
-            showNotification('Záznam bol úspešne aktualizovaný.');
-            closeModal();
-            refreshData(currentEditTab);
-        } else {
-            const err = await res.json();
-            showNotification('Chyba: ' + (err.error || 'Neznáma chyba'), 'error');
-        }
-    } catch (error) {
-        showNotification('Chyba pripojenia.', 'error');
-    }
+        if (res.ok) { showNotification('Záznam bol úspešne aktualizovaný.'); closeModal(); refreshData(currentEditTab); }
+        else { const err = await res.json(); showNotification('Chyba: ' + (err.error || 'Neznáma chyba'), 'error'); }
+    } catch (error) { showNotification('Chyba припоения.', 'error'); }
 });
 
-window.onclick = function(event) {
-    if (event.target == document.getElementById('editModal')) {
-        closeModal();
-    }
-}
+window.onclick = function(event) { if (event.target == document.getElementById('editModal')) closeModal(); }

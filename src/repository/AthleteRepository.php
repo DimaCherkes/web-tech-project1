@@ -399,4 +399,44 @@ class AthleteRepository {
         return $stmt->execute([':id' => $id]);
     }
 
+    public function insertAthletesBulk(array $athletes): array {
+        $this->db->beginTransaction();
+        $results = ['ids' => [], 'errors' => []];
+
+        try {
+            foreach ($athletes as $index => $a) {
+                $firstName = $a['firstName'] ?? '';
+                $lastName = $a['lastName'] ?? '';
+                
+                if (empty($firstName) || empty($lastName)) {
+                    $results['errors'][] = "Riadok " . ($index + 1) . ": Chýba meno или priezvisko.";
+                    continue;
+                }
+
+                if ($this->findAthleteId($firstName, $lastName)) {
+                    $results['errors'][] = "Riadok " . ($index + 1) . ": Športovec $firstName $lastName už existuje.";
+                    continue;
+                }
+
+                $id = $this->insertAthleteWithIds(
+                    $firstName,
+                    $lastName,
+                    $a['birthDate'] ?? null,
+                    $a['birthPlace'] ?? null,
+                    $a['birthCountryId'] ?? null,
+                    $a['deathDate'] ?? null,
+                    $a['deathPlace'] ?? null,
+                    $a['deathCountryId'] ?? null
+                );
+                $results['ids'][] = $id;
+            }
+            $this->db->commit();
+        } catch (\Exception $e) {
+            $this->db->rollBack();
+            throw $e;
+        }
+
+        return $results;
+    }
+
 }

@@ -98,10 +98,17 @@ class AthleteController
         $data = $this->getRequestData();
         
         try {
-            $id = $this->athleteService->createAthlete($data);
-            if ($id > 0) {
+            $result = $this->athleteService->createAthlete($data);
+            
+            if (is_array($result)) {
                 http_response_code(201);
-                echo json_encode(['id' => $id, 'message' => 'Athlete created successfully']);
+                echo json_encode(['results' => $result, 'message' => 'Hromadné spracovanie dokončené']);
+                return;
+            }
+
+            if ($result > 0) {
+                http_response_code(201);
+                echo json_encode(['id' => $result, 'message' => 'Athlete created successfully']);
             } else {
                 http_response_code(409);
                 echo json_encode(['error' => 'Athlete already exists']);
