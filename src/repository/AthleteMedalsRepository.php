@@ -32,15 +32,26 @@ class AthleteMedalsRepository
         return $row ? (int) $row['id'] : null;
     }
 
-    public function findAll(): array {
+    public function findAll(int $page = 1, int $pageSize = 10): array {
+        $offset = ($page - 1) * $pageSize;
         $sql = "SELECT am.*, a.first_name, a.last_name, og.year, d.name as discipline_name, mt.name as medal_name
                 FROM athlete_medals am
                 JOIN athletes a ON am.athlete_id = a.id
                 JOIN olympic_games og ON am.olympic_games_id = og.id
                 JOIN disciplines d ON am.discipline_id = d.id
-                JOIN medal_types mt ON am.medal_type_id = mt.id";
-        $stmt = $this->db->query($sql);
+                JOIN medal_types mt ON am.medal_type_id = mt.id
+                ORDER BY a.id ASC LIMIT :limit OFFSET :offset";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindValue(':limit', $pageSize, PDO::PARAM_INT);
+        $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+        $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function count(): int {
+        $sql = "SELECT COUNT(*) FROM athlete_medals";
+        $stmt = $this->db->query($sql);
+        return (int) $stmt->fetchColumn();
     }
 
     public function findById(int $id): ?array {
@@ -51,7 +62,7 @@ class AthleteMedalsRepository
         return $row ?: null;
     }
 
-    public function updateAthleteMedal(int $id, int $athleteId, int $gameId, int $disciplineId, int $medalTypeId): bool {
+    public function update(int $id, int $athleteId, int $gameId, int $disciplineId, int $medalTypeId): bool {
         $sql = "UPDATE athlete_medals SET 
                 athlete_id = :athlete_id, 
                 olympic_games_id = :game_id, 
@@ -68,7 +79,7 @@ class AthleteMedalsRepository
         ]);
     }
 
-    public function deleteAthleteMedal(int $id): bool {
+    public function delete(int $id): bool {
         $sql = "DELETE FROM athlete_medals WHERE id = :id";
         $stmt = $this->db->prepare($sql);
         return $stmt->execute([':id' => $id]);

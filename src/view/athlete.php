@@ -42,6 +42,7 @@
             <section class="admin-actions" style="margin-top: 30px; padding: 20px; background: #fdf2f2; border: 1px solid #f8d7da; border-radius: 8px;">
                 <h3 style="margin-top:0">Administratívne akcie</h3>
                 <div style="display: flex; gap: 15px;">
+                    <button id="updateBtn" class="btn btn-primary" style="padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer;">Upraviť športovca</button>
                     <button id="deleteBtn" style="padding: 10px 20px; background: #dc3545; color: white; border: none; border-radius: 5px; cursor: pointer;">Vymazať športovca</button>
                 </div>
             </section>

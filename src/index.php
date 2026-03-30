@@ -31,12 +31,16 @@ spl_autoload_register(function ($class) {
 });
 
 use App\Controller\AthleteController;
+use App\controller\AthleteMedalController;
 use App\Controller\GameController;
 use App\Controller\DisciplineController;
 use App\Controller\ImportController;
 use App\Controller\UserController;
 use App\Controller\AdminController;
 use App\Controller\CountryController;
+use App\core\Logger;
+
+Logger::info("index.php file");
 
 // Simple REST Router
 $method = $_SERVER['REQUEST_METHOD'];
@@ -68,8 +72,19 @@ if ($path === '/' || $path === '/index.php') {
     exit;
 }
 
-if ($path === '/athlete') {
+if ($path === '/athlete' || $path === '/athlete/') {
     require __DIR__ . '/view/athlete.php';
+    exit;
+}
+
+if ($path === '/athlete/edit' || $path === '/athlete/edit/') {
+    require __DIR__ . '/view/athlete_edit.php';
+    exit;
+}
+
+if ($path === '/admin') {
+    $controller = new AdminController();
+    $controller->index();
     exit;
 }
 
@@ -141,9 +156,9 @@ if ($path === '/api/athlete' && isset($_GET['id'])) {
 if ($idMatches = matchRoute('/api/athletes/{id}', $path)) {
     $controller = new AthleteController();
     $id = (int)$idMatches[0];
-    if ($method === 'GET') $controller->getAthleteDetails($id);         // OK
-    if ($method === 'PUT') $controller->update($id);                    // OK; method with auth
-    if ($method === 'DELETE') $controller->delete($id);                 // OK; method with auth
+    if ($method === 'GET') $controller->getAthleteDetails($id);
+    if ($method === 'PUT') $controller->update($id);
+    if ($method === 'DELETE') $controller->getAthleteDetails($id);
     exit;
 }
 
@@ -227,13 +242,37 @@ if ($idMatches = matchRoute('/api/medals/{id}', $path)) {
     exit;
 }
 
+// ATHLETE MEDALS
+if ($path === '/api/allAthleteMedals') {
+    $controller = new AthleteMedalController();
+    if ($method === 'GET') $controller->getAll();           // OK
+    exit;
+}
+
+if ($path === '/api/createAthleteMedal') {
+    $controller = new AthleteMedalController();
+    if ($method === 'POST') $controller->create();          // OK; method with auth
+    exit;
+}
+
+if ($idMatches = matchRoute('/api/athleteMedal/{id}', $path)) {
+    $controller = new AthleteMedalController();
+    $id = (int)$idMatches[0];
+    if ($method === 'GET') $controller->getById($id);           // OK
+    if ($method === 'PUT') $controller->update($id);            // OK; method with auth
+    if ($method === 'DELETE') $controller->delete($id);         // OK; method with auth
+    exit;
+}
+
 // MISC API
 if ($path === '/api/years' && $method === 'GET') {
-    (new GameController())->years();
+    $controller = new GameController();
+    $controller->years();
     exit;
 }
 if ($path === '/api/categories' && $method === 'GET') {
-    (new DisciplineController())->categories();
+    $controller = new DisciplineController();
+    $controller->categories();
     exit;
 }
 

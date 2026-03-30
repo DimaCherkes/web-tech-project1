@@ -15,7 +15,7 @@ class OlympicGameDTO
         $this->year = (int) ($data['year'] ?? 0);
         $this->type = (string) ($data['type'] ?? '');
         $this->city = (string) ($data['city'] ?? '');
-        $this->countryName = (string) ($data['countryName'] ?? '');
+        $this->countryName = (string) ($data['country_name'] ?? '');
     }
 
     public function toArray(): array {

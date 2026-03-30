@@ -1,9 +1,16 @@
+console.log("athlete.js v2 loaded");
+
 document.addEventListener('DOMContentLoaded', () => {
+    console.log("DOM fully loaded and parsed");
+    
     const urlParams = new URLSearchParams(window.location.search);
     const athleteId = urlParams.get('id');
 
+    console.log("Found Athlete ID in URL:", athleteId);
+
     if (!athleteId) {
-        window.location.href = '/project1/';
+        console.error("No athlete ID found in URL. Redirecting...");
+        // window.location.href = '/project1/';
         return;
     }
 
@@ -11,15 +18,22 @@ document.addEventListener('DOMContentLoaded', () => {
     const personalInfoElem = document.getElementById('personal-info');
     const participationBody = document.getElementById('participationBody');
 
+    // Setup buttons
+    setupAdminButtons(athleteId);
+
+    // Fetch details
     loadAthleteDetails(athleteId);
 
     async function loadAthleteDetails(id) {
+        console.log("Fetching details for athlete ID:", id);
         try {
-            // RESTful path: /api/athletes/{id}
             const res = await fetch(`/project1/api/athletes/${id}`);
+            console.log("Fetch response status:", res.status);
+            
             if (!res.ok) throw new Error('Športovec nebol nájdený');
 
             const result = await res.json();
+            console.log("Fetched Data:", result);
             const a = result.data;
 
             fullNameElem.textContent = `${a.firstName} ${a.lastName}`;
@@ -33,45 +47,70 @@ document.addEventListener('DOMContentLoaded', () => {
                 ` : '<p><strong>Stav:</strong> Žije / Informácia nie je dostupná</p>'}
             `;
 
-            renderParticipations(a.participations);
-            setupDeleteButton(id);
+            renderParticipations(a.participations || []);
         } catch (error) {
+            console.error('Error fetching athlete details:', error);
             fullNameElem.textContent = 'Chyba';
-            personalInfoElem.innerHTML = `<p class="error">${error.message}</p>`;
+            if (personalInfoElem) personalInfoElem.innerHTML = `<p class="error">${error.message}</p>`;
         }
     }
 
-    function setupDeleteButton(id) {
+    function setupAdminButtons(id) {
+        console.log("Setting up admin buttons for ID:", id);
+        const updateBtn = document.getElementById('updateBtn');
         const deleteBtn = document.getElementById('deleteBtn');
+
+        if (updateBtn) {
+            console.log("Update button found, adding listener");
+            updateBtn.onclick = function(e) {
+                console.log("Update click triggered");
+                e.preventDefault();
+                window.location.href = `/project1/athlete/edit?id=${id}`;
+            };
+        } else {
+            console.log("Update button NOT found in DOM");
+        }
+
         if (deleteBtn) {
-            deleteBtn.addEventListener('click', async (e) => {
+            console.log("Delete button found, adding listener");
+            deleteBtn.onclick = async function(e) {
+                console.log("Delete click triggered");
                 e.preventDefault();
                 if (!confirm('Naozaj vymazať?')) return;
 
-                const res = await fetch(`/project1/api/athletes/${id}`, {
-                    method: 'DELETE'
-                });
+                try {
+                    const res = await fetch(`/project1/api/athletes/${id}`, {
+                        method: 'DELETE'
+                    });
+                    console.log("Delete status:", res.status);
 
-                if (res.status === 204) {
-                    window.location.href = '/project1/';
-                } else {
-                    alert('Chyba pri mazaní.');
+                    if (res.status === 204) {
+                        alert('Športovec bol úspešne vymazaný.');
+                        window.location.href = '/project1/';
+                    } else {
+                        const err = await res.json();
+                        alert('Chyba pri mazaní: ' + (err.error || 'Neznáma chyba'));
+                    }
+                } catch (error) {
+                    console.error('Delete error:', error);
+                    alert('Chyba pri komunikácii so serverom.');
                 }
-            });
+            };
+        } else {
+            console.log("Delete button NOT found in DOM");
         }
     }
 
     function renderParticipations(participations) {
+        if (!participationBody) return;
         participationBody.innerHTML = '';
-        if (participations.length === 0) {
+        if (!participations || participations.length === 0) {
             participationBody.innerHTML = '<tr><td colspan="6">Neboli nájdené žiadne záznamy o účasti.</td></tr>';
             return;
         }
 
         participations.forEach(p => {
             const row = document.createElement('tr');
-            
-            // Localized medal names
             let placement = p.medalName || p.placing;
             if (p.medalName === 'Gold') placement = 'Zlato';
             if (p.medalName === 'Silver') placement = 'Striebro';
