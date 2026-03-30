@@ -48,20 +48,28 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
         }
         .admin-form {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); /* Increased min-width to avoid overlap */
+            gap: 20px; /* Increased gap */
             background: #f9f9f9;
             padding: 20px;
             border-radius: 8px;
             margin-bottom: 20px;
             border: 1px solid #eee;
+            align-items: end;
         }
         .admin-form .form-group {
             margin-bottom: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        .admin-form select, .admin-form input {
+            width: 100%;
+            box-sizing: border-box;
         }
         .admin-form button {
-            align-self: flex-end;
             padding: 10px;
+            height: 40px;
         }
         .filters-container {
             display: flex;
@@ -103,6 +111,7 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
             padding: 20px;
             border: 1px solid #888;
             width: 50%;
+            max-width: 600px;
             border-radius: 8px;
         }
         .modal-header {
@@ -191,6 +200,18 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
             cursor: pointer;
             border: none;
             font-weight: bold;
+        }
+
+        /* Confirmation Modal Specifics */
+        #confirmModal .modal-content {
+            width: 350px;
+            text-align: center;
+        }
+        .confirm-btns {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
         }
     </style>
 </head>
@@ -396,7 +417,7 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
             </div>
         </div>
 
-        <!-- ATHLETES -->
+        <!-- ATHLETEs -->
         <div id="athletes" class="tab-content">
             <div class="admin-section">
                 <h2>Pridať športovcov (hromadne)</h2>
@@ -454,6 +475,18 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
                 <div id="editFields"></div>
                 <button type="submit">Uložiť zmeny</button>
             </form>
+        </div>
+    </div>
+
+    <!-- CONFIRM DELETE MODAL -->
+    <div id="confirmModal" class="modal">
+        <div class="modal-content">
+            <h3>Potvrdenie zmazania</h3>
+            <p id="confirmMessage">Naozaj chcete zmazať tento záznam?</p>
+            <div class="confirm-btns">
+                <button id="confirmYes" class="btn-danger">Zmazať</button>
+                <button id="confirmNo" style="background: #ccc; color: #333;">Zrušiť</button>
+            </div>
         </div>
     </div>
 

@@ -43,23 +43,17 @@ const medalTranslations = {
 document.addEventListener('DOMContentLoaded', () => {
     refreshData('countries');
     setupFormListeners();
-    
-    // Initialize first athlete row
     addAthleteRow();
-    
     document.getElementById('addMoreAthletesBtn').onclick = addAthleteRow;
 });
 
 function showNotification(message, type = 'success') {
     const area = document.getElementById('notificationArea');
     if (!area) return;
-
     const note = document.createElement('div');
     note.className = `notification ${type}`;
     note.textContent = message;
-
     area.appendChild(note);
-
     setTimeout(() => {
         note.style.opacity = '0';
         note.style.transform = 'translateX(100%)';
@@ -72,11 +66,36 @@ function showLoading(show) {
     document.getElementById('loadingOverlay').style.display = show ? 'flex' : 'none';
 }
 
+// Custom confirmation dialog
+function confirmAction(message) {
+    return new Promise((resolve) => {
+        const modal = document.getElementById('confirmModal');
+        const msgEl = document.getElementById('confirmMessage');
+        const yesBtn = document.getElementById('confirmYes');
+        const noBtn = document.getElementById('confirmNo');
+
+        msgEl.textContent = message || 'Naozaj chcete vykonať túto akciu?';
+        modal.style.display = 'block';
+
+        const handleResponse = (result) => {
+            modal.style.display = 'none';
+            yesBtn.onclick = null;
+            noBtn.onclick = null;
+            resolve(result);
+        };
+
+        yesBtn.onclick = () => handleResponse(true);
+        noBtn.onclick = () => handleResponse(false);
+        window.onclick = (event) => {
+            if (event.target == modal) handleResponse(false);
+        };
+    });
+}
+
 async function refreshData(tabId) {
     showLoading(true);
     try {
         let url = `${API_PATHS[tabId]}?pageSize=1000`;
-        
         if (tabId === 'medals') {
             const type = document.getElementById('filterMedalType').value;
             const year = document.getElementById('filterMedalYear').value;
@@ -87,7 +106,6 @@ async function refreshData(tabId) {
             if (medalId) url += `&medal_type_id=${encodeURIComponent(medalId)}`;
             if (discId) url += `&discipline_id=${encodeURIComponent(discId)}`;
         }
-
         if (tabId === 'athletes') {
             const fName = document.getElementById('filterAthleteFirstName').value;
             const lName = document.getElementById('filterAthleteLastName').value;
@@ -97,7 +115,6 @@ async function refreshData(tabId) {
 
         const response = await fetch(url);
         const result = await response.json();
-        
         const items = result.items || result.data || [];
         
         if (tabId === 'countries') allCountries = items;
@@ -125,13 +142,8 @@ async function refreshData(tabId) {
                 tableBody.appendChild(row);
             });
         }
-
         updateAllDropdowns();
-
-        if (tabId === 'medals') {
-            loadDropdownsForMedals();
-        }
-
+        if (tabId === 'medals') loadDropdownsForMedals();
     } catch (error) {
         console.error(`Error refreshing ${tabId}:`, error);
         showNotification(`Chyba pri načítaní ${tabId}`, 'error');
@@ -149,7 +161,6 @@ async function loadDropdownsForMedals() {
 function updateAllDropdowns() {
     if (allCountries.length > 0) {
         updateDropdown('gameCountrySelect', allCountries);
-        // Also update all country selects in the bulk rows
         document.querySelectorAll('.country-select').forEach(sel => {
             const current = sel.value;
             sel.innerHTML = '<option value="">-- Krajina --</option>';
@@ -243,32 +254,20 @@ function addAthleteRow() {
     const container = document.getElementById('athletesRowsContainer');
     const row = document.createElement('div');
     row.className = 'athlete-bulk-row';
-    
-    // Only show remove button if more than 1 row
     const showRemove = container.children.length > 0;
-    
     row.innerHTML = `
         ${showRemove ? '<button type="button" class="remove-row-btn" onclick="this.parentElement.remove()">×</button>' : ''}
-        <div class="form-group"><input type="text" name="firstName" placeholder="Meno" required></div>
-        <div class="form-group"><input type="text" name="lastName" placeholder="Priezvisko" required></div>
-        <div class="form-group"><input type="date" name="birthDate" title="Dátum narodenia"></div>
-        <div class="form-group"><input type="text" name="birthPlace" placeholder="Miesto nar."></div>
-        <div class="form-group">
-            <select name="birthCountryId" class="country-select">
-                <option value="">-- Krajina nar. --</option>
-            </select>
-        </div>
-        <div class="form-group"><input type="date" name="deathDate" title="Dátum úmrtia"></div>
-        <div class="form-group"><input type="text" name="deathPlace" placeholder="Miesto úmr."></div>
-        <div class="form-group">
-            <select name="deathCountryId" class="country-select">
-                <option value="">-- Krajina úmr. --</option>
-            </select>
-        </div>
+        <div class="form-group"><label>Meno:</label><input type="text" name="firstName" required></div>
+        <div class="form-group"><label>Priezvisko:</label><input type="text" name="lastName" required></div>
+        <div class="form-group"><label>Dátum nar.:</label><input type="date" name="birthDate"></div>
+        <div class="form-group"><label>Miesto nar.:</label><input type="text" name="birthPlace"></div>
+        <div class="form-group"><label>Krajina nar.:</label><select name="birthCountryId" class="country-select"><option value="">-- Krajina --</option></select></div>
+        <div class="form-group"><label>Dátum úmr.:</label><input type="date" name="deathDate"></div>
+        <div class="form-group"><label>Miesto úmr.:</label><input type="text" name="deathPlace"></div>
+        <div class="form-group"><label>Krajina úmr.:</label><select name="deathCountryId" class="country-select"><option value="">-- Krajina --</option></select></div>
     `;
-    
     container.appendChild(row);
-    updateAllDropdowns(); // Fill the newly added country selects
+    updateAllDropdowns();
 }
 
 function setupFormListeners() {
@@ -301,14 +300,12 @@ function setupFormListeners() {
         });
     });
 
-    // Special handler for bulk Athlete form
     const athleteForm = document.getElementById('addAthleteForm');
     if (athleteForm) {
         athleteForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const rows = document.querySelectorAll('.athlete-bulk-row');
             const athletesData = [];
-
             rows.forEach(row => {
                 const athlete = {};
                 row.querySelectorAll('input, select').forEach(input => {
@@ -318,9 +315,7 @@ function setupFormListeners() {
                 });
                 if (athlete.firstName && athlete.lastName) athletesData.push(athlete);
             });
-
             if (athletesData.length === 0) return;
-
             try {
                 showLoading(true);
                 const res = await fetch(CRUD_PATHS.createAthlete, {
@@ -329,38 +324,29 @@ function setupFormListeners() {
                     body: JSON.stringify(athletesData)
                 });
                 const result = await res.json();
-                
                 if (res.ok) {
                     if (result.results) {
                         const s = result.results;
                         const msg = `Vytvorených: ${s.ids.length}. Chyby: ${s.errors.length}`;
                         showNotification(msg, s.errors.length > 0 ? 'info' : 'success');
-                        if (s.errors.length > 0) s.errors.forEach(err => console.warn(err));
-                    } else {
-                        showNotification('Športovci úspešne pridaní.');
-                    }
-                    // Reset form: keep 1 empty row
+                    } else showNotification('Športovci úspešne pridaní.');
                     document.getElementById('athletesRowsContainer').innerHTML = '';
                     addAthleteRow();
                     refreshData('athletes');
-                } else {
-                    showNotification('Chyba: ' + (result.error || 'Nastala chyba'), 'error');
-                }
-            } catch (error) {
-                showNotification('Chyba pripojenia.', 'error');
-            } finally {
-                showLoading(false);
-            }
+                } else showNotification('Chyba: ' + (result.error || 'Nastala chyba'), 'error');
+            } catch (error) { showNotification('Chyba pripojenia.', 'error'); }
+            finally { showLoading(false); }
         });
     }
 }
 
 async function deleteItem(tabId, id) {
-    if (!confirm('Naozaj chcete zmazať tento záznam?')) return;
+    const confirmed = await confirmAction('Naozaj chcete zmazať tento záznam?');
+    if (!confirmed) return;
     try {
         const res = await fetch(`${CRUD_PATHS[tabId]}${id}`, { method: 'DELETE' });
         if (res.status === 204 || res.ok) { showNotification('Záznam bol zmazaný.'); refreshData(tabId); }
-        else { showNotification('Chyba pri mazaní záznamu.', 'error'); }
+        else showNotification('Chyba pri mazaní záznamu.', 'error');
     } catch (error) { showNotification('Chyba pripojenia.', 'error'); }
 }
 
@@ -408,7 +394,7 @@ async function openEditModal(tabId, item) {
 function createField(name, label, value, type = 'text') {
     const div = document.createElement('div');
     div.className = 'form-group';
-    div.innerHTML = `<label>${label}:</label><input type="${type}" name="${name}" value="${value || ''}" class="form-group input" style="width:100%">`;
+    div.innerHTML = `<label>${label}:</label><input type="${type}" name="${name}" value="${value || ''}" class="form-group input">`;
     return div;
 }
 
@@ -421,7 +407,6 @@ function createSelectField(name, label, items, currentValue, textFn = item => it
     const select = document.createElement('select');
     select.name = name;
     select.className = 'form-group select';
-    select.style.width = '100%';
     select.innerHTML = '<option value="">-- Vyberte --</option>';
     items.forEach(item => {
         const opt = document.createElement('option');
@@ -447,7 +432,6 @@ document.getElementById('editForm').addEventListener('submit', async (e) => {
     if (data.gameId) data.gameId = parseInt(data.gameId);
     if (data.disciplineId) data.disciplineId = parseInt(data.disciplineId);
     if (data.medalTypeId) data.medalTypeId = parseInt(data.medalTypeId);
-
     try {
         const res = await fetch(`${CRUD_PATHS[currentEditTab]}${currentEditId}`, {
             method: 'PUT',
@@ -456,7 +440,10 @@ document.getElementById('editForm').addEventListener('submit', async (e) => {
         });
         if (res.ok) { showNotification('Záznam bol úspešne aktualizovaný.'); closeModal(); refreshData(currentEditTab); }
         else { const err = await res.json(); showNotification('Chyba: ' + (err.error || 'Neznáma chyba'), 'error'); }
-    } catch (error) { showNotification('Chyba припоения.', 'error'); }
+    } catch (error) { showNotification('Chyba pripojenia.', 'error'); }
 });
 
-window.onclick = function(event) { if (event.target == document.getElementById('editModal')) closeModal(); }
+window.onclick = function(event) {
+    if (event.target == document.getElementById('editModal')) closeModal();
+    if (event.target == document.getElementById('confirmModal')) document.getElementById('confirmModal').style.display = 'none';
+}
