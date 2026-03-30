@@ -1,173 +1,348 @@
+<?php
+if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
+    header("location: /project1/login");
+    exit;
+}
+?>
 <!DOCTYPE html>
 <html lang="sk">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Administrácia - Olympijské hry</title>
     <link rel="stylesheet" href="/project1/view/css/style.css">
     <style>
-        section { margin-bottom: 30px; padding: 20px; border: 1px solid #ddd; border-radius: 8px; background: #f9f9f9; }
-        form { display: grid; gap: 10px; max-width: 500px; }
-        .banner { padding: 15px; border-radius: 5px; margin-bottom: 20px; border: 1px solid transparent; display: none; }
-        .success-banner { background: #d4edda; color: #155724; border-color: #c3e6cb; }
-        .error-banner { background: #f8d7da; color: #721c24; border-color: #f5c6cb; }
-        h1 { color: #333; }
-        h2 { border-bottom: 2px solid #eee; padding-bottom: 10px; margin-top: 0; }
+        .admin-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #ddd;
+            padding-bottom: 10px;
+        }
+        .tab-btn {
+            padding: 10px 20px;
+            background: #f1f1f1;
+            border: 1px solid #ccc;
+            border-radius: 4px 4px 0 0;
+            cursor: pointer;
+            font-weight: bold;
+            color: #333;
+        }
+        .tab-btn.active {
+            background: #007bff;
+            color: white;
+            border-color: #007bff;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .admin-section {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+        .admin-form {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            background: #f9f9f9;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border: 1px solid #eee;
+        }
+        .admin-form .form-group {
+            margin-bottom: 0;
+        }
+        .admin-form button {
+            align-self: flex-end;
+            padding: 10px;
+        }
+        .btn-sm {
+            padding: 5px 10px;
+            font-size: 0.9em;
+        }
+        .btn-danger {
+            background-color: #dc3545;
+        }
+        .btn-warning {
+            background-color: #ffc107;
+            color: #333;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: 10% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 50%;
+            border-radius: 8px;
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        .close {
+            color: #aaa;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .close:hover { color: black; }
+        
+        .action-btns {
+            display: flex;
+            gap: 5px;
+        }
+        
+        #loadingOverlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255,255,255,0.7);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+        }
     </style>
 </head>
 <body>
     <?php include __DIR__ . '/partials/header.php'; ?>
 
     <main>
-        <h1>Administrácia - vytvorenie entít</h1>
+        <h1>Administrácia entít</h1>
 
-        <div id="statusBanner" class="banner"></div>
+        <div class="admin-tabs">
+            <button class="tab-btn active" onclick="openTab('countries')">Krajiny</button>
+            <button class="tab-btn" onclick="openTab('disciplines')">Disciplíny</button>
+            <button class="tab-btn" onclick="openTab('games')">OH Hry</button>
+            <button class="tab-btn" onclick="openTab('medals')">Medaily</button>
+            <button class="tab-btn" onclick="openTab('athletes')">Športovci</button>
+        </div>
 
-        <div class="admin-grid">
-            <!-- ATHLETES -->
-            <section>
-                <h2>Pridať športovca</h2>
-                <form data-api="/project1/api/athletes">
-                    <input type="text" name="firstName" placeholder="Meno" required>
-                    <input type="text" name="lastName" placeholder="Priezvisko" required>
-                    <input type="text" name="birthDate" placeholder="Dátum narodenia (YYYY-MM-DD)">
-                    <input type="text" name="birthPlace" placeholder="Miesto narodenia">
-                    
-                    <select name="birthCountryId">
-                        <option value="">Vyberte krajinu narodenia</option>
-                        <?php foreach ($data['countries'] as $c): ?>
-                            <option value="<?= $c['id'] ?>"><?= htmlspecialchars($c['name']) ?></option>
-                        <?php endforeach; ?>
-                    </select>
-
-                    <input type="text" name="deathDate" placeholder="Dátum úmrtia (YYYY-MM-DD)">
-                    <input type="text" name="deathPlace" placeholder="Miesto úmrtia">
-                    
-                    <select name="deathCountryId">
-                        <option value="">Vyberte krajinu úmrtia</option>
-                        <?php foreach ($data['countries'] as $c): ?>
-                            <option value="<?= $c['id'] ?>"><?= htmlspecialchars($c['name']) ?></option>
-                        <?php endforeach; ?>
-                    </select>
-
-                    <button type="submit">Vytvoriť športovca</button>
+        <!-- COUNTRIES -->
+        <div id="countries" class="tab-content active">
+            <div class="admin-section">
+                <h2>Pridať novú krajinu</h2>
+                <form id="addCountryForm" class="admin-form">
+                    <div class="form-group">
+                        <label>Názov:</label>
+                        <input type="text" name="name" required placeholder="Slovensko">
+                    </div>
+                    <div class="form-group">
+                        <label>Kód (ISO):</label>
+                        <input type="text" name="code" placeholder="SVK">
+                    </div>
+                    <button type="submit">Uložiť krajinu</button>
                 </form>
-            </section>
 
-            <!-- COUNTRIES -->
-            <section>
-                <h2>Pridať krajinu</h2>
-                <form data-api="/project1/api/countries">
-                    <input type="text" name="name" placeholder="Názov krajiny" required>
-                    <input type="text" name="code" placeholder="Kód (napr. SVK)">
-                    <button type="submit">Pridať krajinu</button>
-                </form>
-            </section>
+                <h2>Zoznam krajín</h2>
+                <div class="table-container">
+                    <table id="countriesTable">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Názov</th>
+                                <th>Kód</th>
+                                <th>Akcie</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
 
-            <!-- DISCIPLINES -->
-            <section>
-                <h2>Pridať disciplínu</h2>
-                <form data-api="/project1/api/disciplines">
-                    <input type="text" name="name" placeholder="Názov disciplíny" required>
-                    <input type="text" name="category" placeholder="Kategória">
-                    <button type="submit">Pridať disciplínu</button>
+        <!-- DISCIPLINES -->
+        <div id="disciplines" class="tab-content">
+            <div class="admin-section">
+                <h2>Pridať novú disciplínu</h2>
+                <form id="addDisciplineForm" class="admin-form">
+                    <div class="form-group">
+                        <label>Názov:</label>
+                        <input type="text" name="name" required placeholder="Vodný slalom">
+                    </div>
+                    <div class="form-group">
+                        <label>Kategória:</label>
+                        <input type="text" name="category" placeholder="Kanoistika">
+                    </div>
+                    <button type="submit">Uložiť disciplínu</button>
                 </form>
-            </section>
 
-            <!-- OLYMPIC GAMES -->
-            <section>
-                <h2>Pridať olympijské hry</h2>
-                <form data-api="/project1/api/games">
-                    <input type="number" name="year" placeholder="Rok" required>
-                    <select name="type">
-                        <option value="LOH">LOH</option>
-                        <option value="ZOH">ZOH</option>
-                    </select>
-                    <input type="text" name="city" placeholder="Mesto" required>
-                    <select name="countryId" required>
-                        <option value="">Vyberte krajinu</option>
-                        <?php foreach ($data['countries'] as $c): ?>
-                            <option value="<?= $c['id'] ?>"><?= htmlspecialchars($c['name']) ?></option>
-                        <?php endforeach; ?>
-                    </select>
-                    <button type="submit">Pridať hry</button>
-                </form>
-            </section>
+                <h2>Zoznam disciplín</h2>
+                <div class="table-container">
+                    <table id="disciplinesTable">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Názov</th>
+                                <th>Kategória</th>
+                                <th>Akcie</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
 
-            <!-- ATHLETE MEDALS -->
-            <section>
-                <h2>Priradiť medailu</h2>
-                <form data-api="/project1/api/medals">
-                    <select name="athleteId" required>
-                        <option value="">Vyberte športovca</option>
-                        <?php foreach ($data['athletes'] as $a): ?>
-                            <option value="<?= $a['id'] ?>"><?= htmlspecialchars($a['first_name'] . ' ' . $a['last_name']) ?></option>
-                        <?php endforeach; ?>
-                    </select>
-                    <select name="gameId" required>
-                        <option value="">Vyberte hry</option>
-                        <?php foreach ($data['games'] as $g): ?>
-                            <option value="<?= $g['id'] ?>"><?= $g['year'] ?> <?= $g['type'] ?> (<?= htmlspecialchars($g['city'] ?? '') ?>)</option>
-                        <?php endforeach; ?>
-                    </select>
-                    <select name="disciplineId" required>
-                        <option value="">Vyberte disciplínu</option>
-                        <?php foreach ($data['disciplines'] as $d): ?>
-                            <option value="<?= $d['id'] ?>"><?= htmlspecialchars($d['name']) ?></option>
-                        <?php endforeach; ?>
-                    </select>
-                    <select name="medalTypeId" required>
-                        <option value="">Vyberte medailu</option>
-                        <?php foreach ($data['medalTypes'] as $mt): ?>
-                            <option value="<?= $mt['id'] ?>"><?= htmlspecialchars($mt['name']) ?> (<?= $mt['placing'] ?>.)</option>
-                        <?php endforeach; ?>
-                    </select>
-                    <button type="submit">Priradiť medailu</button>
+        <!-- OLYMPIC GAMES -->
+        <div id="games" class="tab-content">
+            <div class="admin-section">
+                <h2>Pridať nové hry</h2>
+                <form id="addGameForm" class="admin-form">
+                    <div class="form-group">
+                        <label>Rok:</label>
+                        <input type="number" name="year" required placeholder="2024">
+                    </div>
+                    <div class="form-group">
+                        <label>Typ:</label>
+                        <select name="type">
+                            <option value="LOH">LOH (Letné)</option>
+                            <option value="ZOH">ZOH (Zimné)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Mesto:</label>
+                        <input type="text" name="city" required placeholder="Paríž">
+                    </div>
+                    <div class="form-group">
+                        <label>Krajina:</label>
+                        <select name="country_id" id="gameCountrySelect" required>
+                            <option value="">-- Vyberte krajinu --</option>
+                        </select>
+                    </div>
+                    <button type="submit">Uložiť hry</button>
                 </form>
-            </section>
+
+                <h2>Zoznam olympijských hier</h2>
+                <div class="table-container">
+                    <table id="gamesTable">
+                        <thead>
+                            <tr>
+                                <th>Rok</th>
+                                <th>Typ</th>
+                                <th>Mesto</th>
+                                <th>Akcie</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ATHLETE MEDALS -->
+        <div id="medals" class="tab-content">
+            <div class="admin-section">
+                <h2>Priradiť medailu športovcovi</h2>
+                <form id="addMedalForm" class="admin-form">
+                    <div class="form-group">
+                        <label>Športovec:</label>
+                        <select name="athlete_id" id="medalAthleteSelect" required></select>
+                    </div>
+                    <div class="form-group">
+                        <label>Hry:</label>
+                        <select name="olympic_games_id" id="medalGameSelect" required></select>
+                    </div>
+                    <div class="form-group">
+                        <label>Disciplína:</label>
+                        <select name="discipline_id" id="medalDisciplineSelect" required></select>
+                    </div>
+                    <div class="form-group">
+                        <label>Umiestnenie (číslo):</label>
+                        <input type="number" name="placing" required min="1" max="100" value="1">
+                    </div>
+                    <button type="submit">Uložiť medailu</button>
+                </form>
+
+                <h2>Zoznam medailí</h2>
+                <div class="table-container">
+                    <table id="medalsTable">
+                        <thead>
+                            <tr>
+                                <th>Športovec</th>
+                                <th>Rok/Hry</th>
+                                <th>Disciplína</th>
+                                <th>Umiestnenie</th>
+                                <th>Akcie</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ATHLETES -->
+        <div id="athletes" class="tab-content">
+            <div class="admin-section">
+                <h2>Zoznam športovcov</h2>
+                <div class="table-container">
+                    <table id="athletesTable">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Meno</th>
+                                <th>Priezvisko</th>
+                                <th>Dátum narodenia</th>
+                                <th>Akcie</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
         </div>
     </main>
 
+    <!-- EDIT MODAL -->
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">Upraviť záznam</h2>
+                <span class="close" onclick="closeModal()">&times;</span>
+            </div>
+            <form id="editForm" class="admin-form" style="grid-template-columns: 1fr;">
+                <div id="editFields"></div>
+                <button type="submit">Uložiť zmeny</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="loadingOverlay">
+        <strong>Načítavam...</strong>
+    </div>
+
+    <script src="/project1/view/js/admin.js"></script>
     <script>
-        document.querySelectorAll('form[data-api]').forEach(form => {
-            form.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                const banner = document.getElementById('statusBanner');
-                const apiUrl = form.dataset.api;
-                const formData = new FormData(form);
-                const data = Object.fromEntries(formData.entries());
-
-                try {
-                    const response = await fetch(apiUrl, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify(data)
-                    });
-
-                    const result = await response.json();
-
-                    banner.style.display = 'block';
-                    if (response.status === 201) {
-                        banner.className = 'banner success-banner';
-                        banner.textContent = result.message || 'Záznam úspešne vytvorený.';
-                        form.reset();
-                    } else {
-                        banner.className = 'banner error-banner';
-                        banner.textContent = result.error || 'Nastala chyba pri spracovaní.';
-                    }
-                } catch (error) {
-                    banner.style.display = 'block';
-                    banner.className = 'banner error-banner';
-                    banner.textContent = 'Chyba pripojenia k serveru.';
-                }
-
-                // Hide banner after 5 seconds
-                setTimeout(() => {
-                    banner.style.display = 'none';
-                }, 5000);
-            });
-        });
+        function openTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            event.currentTarget.classList.add('active');
+            
+            // Trigger data load for the tab if needed
+            if (typeof refreshData === 'function') refreshData(tabId);
+        }
     </script>
 </body>
 </html>

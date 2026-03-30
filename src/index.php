@@ -82,9 +82,8 @@ if ($path === '/athlete/edit' || $path === '/athlete/edit/') {
     exit;
 }
 
-if ($path === '/admin') {
-    $controller = new AdminController();
-    $controller->index();
+if ($path === '/admin' || $path === '/admin/') {
+    require __DIR__ . '/view/admin.php';
     exit;
 }
 
