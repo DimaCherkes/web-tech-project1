@@ -32,25 +32,84 @@ class AthleteMedalsRepository
         return $row ? (int) $row['id'] : null;
     }
 
-    public function findAll(int $page = 1, int $pageSize = 10): array {
+    public function findAll(array $filters = [], int $page = 1, int $pageSize = 10): array {
         $offset = ($page - 1) * $pageSize;
-        $sql = "SELECT am.*, a.first_name, a.last_name, og.year, d.name as discipline_name, mt.name as medal_name
+        
+        $sql = "SELECT am.*, a.first_name, a.last_name, og.year, og.type, d.name as discipline_name, mt.name as medal_name, mt.placing
                 FROM athlete_medals am
                 JOIN athletes a ON am.athlete_id = a.id
                 JOIN olympic_games og ON am.olympic_games_id = og.id
                 JOIN disciplines d ON am.discipline_id = d.id
-                JOIN medal_types mt ON am.medal_type_id = mt.id
-                ORDER BY a.id ASC LIMIT :limit OFFSET :offset";
+                JOIN medal_types mt ON am.medal_type_id = mt.id";
+
+        $where = [];
+        $params = [];
+
+        if (!empty($filters['type'])) {
+            $where[] = "og.type = :type";
+            $params[':type'] = $filters['type'];
+        }
+        if (!empty($filters['year'])) {
+            $where[] = "og.year = :year";
+            $params[':year'] = (int)$filters['year'];
+        }
+        if (!empty($filters['medal_type_id'])) {
+            $where[] = "am.medal_type_id = :medal_type_id";
+            $params[':medal_type_id'] = (int)$filters['medal_type_id'];
+        }
+        if (!empty($filters['discipline_id'])) {
+            $where[] = "am.discipline_id = :discipline_id";
+            $params[':discipline_id'] = (int)$filters['discipline_id'];
+        }
+
+        if ($where) {
+            $sql .= " WHERE " . implode(" AND ", $where);
+        }
+
+        $sql .= " ORDER BY og.year DESC, a.last_name ASC LIMIT :limit OFFSET :offset";
+        
         $stmt = $this->db->prepare($sql);
+        foreach ($params as $key => $val) {
+            $stmt->bindValue($key, $val);
+        }
         $stmt->bindValue(':limit', $pageSize, PDO::PARAM_INT);
         $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
         $stmt->execute();
+        
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    public function count(): int {
-        $sql = "SELECT COUNT(*) FROM athlete_medals";
-        $stmt = $this->db->query($sql);
+    public function count(array $filters = []): int {
+        $sql = "SELECT COUNT(*) 
+                FROM athlete_medals am
+                JOIN olympic_games og ON am.olympic_games_id = og.id";
+        
+        $where = [];
+        $params = [];
+
+        if (!empty($filters['type'])) {
+            $where[] = "og.type = :type";
+            $params[':type'] = $filters['type'];
+        }
+        if (!empty($filters['year'])) {
+            $where[] = "og.year = :year";
+            $params[':year'] = (int)$filters['year'];
+        }
+        if (!empty($filters['medal_type_id'])) {
+            $where[] = "am.medal_type_id = :medal_type_id";
+            $params[':medal_type_id'] = (int)$filters['medal_type_id'];
+        }
+        if (!empty($filters['discipline_id'])) {
+            $where[] = "am.discipline_id = :discipline_id";
+            $params[':discipline_id'] = (int)$filters['discipline_id'];
+        }
+
+        if ($where) {
+            $sql .= " WHERE " . implode(" AND ", $where);
+        }
+
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute($params);
         return (int) $stmt->fetchColumn();
     }
 
@@ -92,8 +151,6 @@ class AthleteMedalsRepository
         }
 
         $placingInt = (int)$placing;
-
-        // Get medal type ID from separate repository
         $medalTypeId = $this->medalTypesRepository->ensureMedalTypeExists($placingInt);
 
         $sql = "INSERT INTO athlete_medals (athlete_id, olympic_games_id, discipline_id, medal_type_id) 

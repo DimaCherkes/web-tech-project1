@@ -19,8 +19,15 @@ class AthleteMedalService {
         $page = (int)($queryParams['page'] ?? 1);
         $pageSize = (int)($queryParams['pageSize'] ?? 10);
 
-        $data = $this->repository->findAll($page, $pageSize);
-        $totalItems = $this->repository->count();
+        $filters = [
+            'type' => $queryParams['type'] ?? null,
+            'year' => $queryParams['year'] ?? null,
+            'medal_type_id' => $queryParams['medal_type_id'] ?? null,
+            'discipline_id' => $queryParams['discipline_id'] ?? null,
+        ];
+
+        $data = $this->repository->findAll($filters, $page, $pageSize);
+        $totalItems = $this->repository->count($filters);
 
         return [
             'items' => $data,

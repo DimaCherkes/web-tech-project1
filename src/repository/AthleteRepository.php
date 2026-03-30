@@ -205,7 +205,14 @@ class AthleteRepository {
             $where[] = "a.first_name LIKE :first_name";
             $params[':first_name'] = '%' . $filters['firstName'] . '%';
         }
-        // ... (rest of filtering logic)
+        if (!empty($filters['lastName'])) {
+            $where[] = "a.last_name LIKE :last_name";
+            $params[':last_name'] = '%' . $filters['lastName'] . '%';
+        }
+        if (!empty($filters['countryId'])) {
+            $where[] = "a.birth_country_id = :country_id";
+            $params[':country_id'] = $filters['countryId'];
+        }
 
         if ($where) {
             $sql .= " WHERE " . implode(" AND ", $where);

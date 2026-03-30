@@ -24,7 +24,7 @@ let allCountries = [];
 let allAthletes = [];
 let allGames = [];
 let allDisciplines = [];
-let medalTypesMap = {}; // Will map name (Gold/Silver/Bronze) to ID from DB
+let medalTypesMap = {};
 
 const tabTitles = {
     countries: 'krajinu',
@@ -70,7 +70,29 @@ function showLoading(show) {
 async function refreshData(tabId) {
     showLoading(true);
     try {
-        const response = await fetch(`${API_PATHS[tabId]}?pageSize=1000`);
+        let url = `${API_PATHS[tabId]}?pageSize=1000`;
+        
+        // Add Filters to URL
+        if (tabId === 'medals') {
+            const type = document.getElementById('filterMedalType').value;
+            const year = document.getElementById('filterMedalYear').value;
+            const medalId = document.getElementById('filterMedalId').value;
+            const discId = document.getElementById('filterMedalDiscipline').value;
+            
+            if (type) url += `&type=${encodeURIComponent(type)}`;
+            if (year) url += `&year=${encodeURIComponent(year)}`;
+            if (medalId) url += `&medal_type_id=${encodeURIComponent(medalId)}`;
+            if (discId) url += `&discipline_id=${encodeURIComponent(discId)}`;
+        }
+
+        if (tabId === 'athletes') {
+            const fName = document.getElementById('filterAthleteFirstName').value;
+            const lName = document.getElementById('filterAthleteLastName').value;
+            if (fName) url += `&firstName=${encodeURIComponent(fName)}`;
+            if (lName) url += `&lastName=${encodeURIComponent(lName)}`;
+        }
+
+        const response = await fetch(url);
         const result = await response.json();
         
         const items = result.items || result.data || [];
@@ -80,22 +102,16 @@ async function refreshData(tabId) {
         if (tabId === 'games') allGames = items;
         if (tabId === 'disciplines') allDisciplines = items;
 
-        // Dynamic mapping of medal types from existing records
         if (tabId === 'medals') {
             items.forEach(item => {
                 const name = item.medal_name || item.medalName;
                 const id = item.medal_type_id || item.medalId;
                 if (name && id) {
-                    // Normalize to English to match my internal keys
                     const engName = Object.keys(medalTranslations).find(k => k === name || medalTranslations[k] === name);
-                    if (engName) {
-                        medalTypesMap[engName] = id;
-                    } else {
-                        medalTypesMap[name] = id;
-                    }
+                    if (engName) medalTypesMap[engName] = id;
+                    else medalTypesMap[name] = id;
                 }
             });
-            console.log("Detected Medal IDs:", medalTypesMap);
         }
 
         const tableBody = document.querySelector(`#${tabId}Table tbody`);
@@ -141,19 +157,26 @@ function updateAllDropdowns() {
     }
     if (allDisciplines.length > 0) {
         updateDropdown('medalDisciplineSelect', allDisciplines, d => `${d.name} (${d.category || '-'})`);
+        updateDropdown('filterMedalDiscipline', allDisciplines);
     }
 
-    // Update medal type dropdown with dynamic IDs
     const medalTypeSelect = document.querySelector('select[name="medal_type_id"]');
-    if (medalTypeSelect && Object.keys(medalTypesMap).length > 0) {
-        medalTypeSelect.innerHTML = '';
-        ['Gold', 'Silver', 'Bronze'].forEach(type => {
-            if (medalTypesMap[type]) {
-                const opt = document.createElement('option');
-                opt.value = medalTypesMap[type];
-                opt.textContent = `${medalTranslations[type]} (${type === 'Gold' ? '1.' : type === 'Silver' ? '2.' : '3.'} miesto)`;
-                medalTypeSelect.appendChild(opt);
-            }
+    const filterMedalId = document.getElementById('filterMedalId');
+    
+    if (Object.keys(medalTypesMap).length > 0) {
+        [medalTypeSelect, filterMedalId].forEach(sel => {
+            if (!sel) return;
+            const current = sel.value;
+            sel.innerHTML = sel === filterMedalId ? '<option value="">Všetky</option>' : '';
+            ['Gold', 'Silver', 'Bronze'].forEach(type => {
+                if (medalTypesMap[type]) {
+                    const opt = document.createElement('option');
+                    opt.value = medalTypesMap[type];
+                    opt.textContent = medalTranslations[type];
+                    sel.appendChild(opt);
+                }
+            });
+            if (current) sel.value = current;
         });
     }
 }
@@ -162,7 +185,8 @@ function updateDropdown(id, items, textFn = item => item.name) {
     const select = document.getElementById(id);
     if (!select) return;
     const currentValue = select.value;
-    select.innerHTML = '<option value="">-- Vyberte --</option>';
+    const firstOption = select.options[0] ? select.options[0].textContent : '-- Vyberte --';
+    select.innerHTML = `<option value="">${firstOption}</option>`;
     items.forEach(item => {
         const opt = document.createElement('option');
         opt.value = item.id;

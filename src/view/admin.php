@@ -63,6 +63,19 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
             align-self: flex-end;
             padding: 10px;
         }
+        .filters-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            background: #f0f7ff;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            align-items: flex-end;
+        }
+        .filters-container .form-group {
+            margin-bottom: 0;
+        }
         .btn-sm {
             padding: 5px 10px;
             font-size: 0.9em;
@@ -308,6 +321,35 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
                 </form>
 
                 <h2>Zoznam medailí</h2>
+                
+                <div class="filters-container">
+                    <div class="form-group">
+                        <label>Typ:</label>
+                        <select id="filterMedalType">
+                            <option value="">Všetky</option>
+                            <option value="LOH">LOH</option>
+                            <option value="ZOH">ZOH</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Rok:</label>
+                        <input type="number" id="filterMedalYear" placeholder="Rok" style="width: 100px;">
+                    </div>
+                    <div class="form-group">
+                        <label>Medaile:</label>
+                        <select id="filterMedalId">
+                            <option value="">Všetky</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Disciplína:</label>
+                        <select id="filterMedalDiscipline">
+                            <option value="">Všetky</option>
+                        </select>
+                    </div>
+                    <button onclick="refreshData('medals')" class="btn-sm">Filtrovať</button>
+                </div>
+
                 <div class="table-container">
                     <table id="medalsTable">
                         <thead>
@@ -370,6 +412,19 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
                 </form>
 
                 <h2>Zoznam športovcov</h2>
+
+                <div class="filters-container">
+                    <div class="form-group">
+                        <label>Meno:</label>
+                        <input type="text" id="filterAthleteFirstName" placeholder="Hľadať meno">
+                    </div>
+                    <div class="form-group">
+                        <label>Priezvisko:</label>
+                        <input type="text" id="filterAthleteLastName" placeholder="Hľadať priezvisko">
+                    </div>
+                    <button onclick="refreshData('athletes')" class="btn-sm">Hľadať</button>
+                </div>
+
                 <div class="table-container">
                     <table id="athletesTable">
                         <thead>
