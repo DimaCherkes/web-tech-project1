@@ -87,6 +87,17 @@ if ($path === '/admin' || $path === '/admin/') {
     exit;
 }
 
+if ($path === '/api-docs' || $path === '/api-docs/') {
+    require __DIR__ . '/view/swagger.php';
+    exit;
+}
+
+if ($path === '/api-docs/json') {
+    header('Content-Type: application/json');
+    readfile(__DIR__ . '/openapi.json');
+    exit;
+}
+
 // --- AUTH ROUTES ---
 if ($path === '/login') {
     $controller = new UserController();
