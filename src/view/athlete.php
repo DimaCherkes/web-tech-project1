@@ -37,6 +37,7 @@
                 </tbody>
             </table>
         </section>
+
     </main>
 
     <script src="/project1/view/js/athlete.js"></script>
