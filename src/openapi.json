@@ -15,15 +15,63 @@
     "/api/allAthletes": {
       "get": {
         "tags": ["Athletes"],
-        "summary": "Získať zoznam všetkých športovcov",
+        "summary": "Získať zoznam všetkých športovcov s podrobnými údajmi",
         "parameters": [
           { "name": "page", "in": "query", "schema": { "type": "integer", "default": 1 } },
           { "name": "pageSize", "in": "query", "schema": { "type": "integer", "default": 10 } },
           { "name": "firstName", "in": "query", "schema": { "type": "string" } },
-          { "name": "lastName", "in": "query", "schema": { "type": "string" } }
+          { "name": "lastName", "in": "query", "schema": { "type": "string" } },
+          { "name": "countryId", "in": "query", "schema": { "type": "integer" } },
+          { "name": "sortBy", "in": "query", "schema": { "type": "string", "default": "id" } },
+          { "name": "sortDir", "in": "query", "schema": { "type": "string", "enum": ["ASC", "DESC"], "default": "ASC" } }
         ],
         "responses": {
-          "200": { "description": "Úspešný návrat dát" }
+          "200": { 
+            "description": "Úspešný návrat dát",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": { "type": "array", "items": { "$ref": "#/components/schemas/Athlete" } },
+                    "pagination": { "$ref": "#/components/schemas/Pagination" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/athletesList": {
+      "get": {
+        "tags": ["Athletes"],
+        "summary": "Získať zjednodušený zoznam športovcov (pre tabuľkový prehľad)",
+        "parameters": [
+          { "name": "page", "in": "query", "schema": { "type": "integer", "default": 1 } },
+          { "name": "pageSize", "in": "query", "schema": { "type": "integer", "default": 10 } },
+          { "name": "firstName", "in": "query", "schema": { "type": "string" } },
+          { "name": "lastName", "in": "query", "schema": { "type": "string" } },
+          { "name": "category", "in": "query", "schema": { "type": "string" } },
+          { "name": "year", "in": "query", "schema": { "type": "integer" } },
+          { "name": "sortBy", "in": "query", "schema": { "type": "string", "default": "id" } },
+          { "name": "sortDir", "in": "query", "schema": { "type": "string", "enum": ["ASC", "DESC"], "default": "ASC" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Úspešný návrat dát",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": { "type": "array", "items": { "$ref": "#/components/schemas/AthleteListItem" } },
+                    "pagination": { "$ref": "#/components/schemas/Pagination" }
+                  }
+                }
+              }
+            }
+          }
         }
       }
     },
@@ -44,87 +92,333 @@
           }
         },
         "responses": {
-          "201": { "description": "Vytvorené" }
+          "201": { "description": "Vytvorené" },
+          "409": { "description": "Športovec už existuje" }
         }
       }
     },
     "/api/athletes/{id}": {
       "get": {
         "tags": ["Athletes"],
+        "summary": "Detail športovca podľa ID",
         "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }],
-        "responses": { "200": { "description": "Detail športovca" } }
+        "responses": { 
+          "200": { 
+            "description": "Detail športovca",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": { "$ref": "#/components/schemas/AthleteDetail" }
+                  }
+                }
+              }
+            }
+          },
+          "404": { "description": "Športovec nenájdený" }
+        }
       },
       "put": {
         "tags": ["Athletes"],
+        "summary": "Aktualizovať údaje športovca",
         "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }],
         "requestBody": {
           "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AthleteInput" } } }
         },
-        "responses": { "200": { "description": "Aktualizované" } }
+        "responses": { 
+          "200": { "description": "Aktualizované" },
+          "404": { "description": "Športovec nenájdený alebo žiadne zmeny" }
+        }
       },
       "delete": {
         "tags": ["Athletes"],
+        "summary": "Zmazať športovca",
         "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }],
-        "responses": { "204": { "description": "Zmazané" } }
+        "responses": { 
+          "204": { "description": "Zmazané" },
+          "404": { "description": "Športovec nenájdený" }
+        }
+      }
+    },
+    "/api/athlete": {
+      "get": {
+        "tags": ["Athletes"],
+        "summary": "Detail športovca podľa ID (query parameter)",
+        "parameters": [{ "name": "id", "in": "query", "required": true, "schema": { "type": "integer" } }],
+        "responses": { 
+          "200": { "description": "Detail športovca" },
+          "404": { "description": "Športovec nenájdený" }
+        }
       }
     },
     "/api/allCountries": {
       "get": {
         "tags": ["Countries"],
-        "parameters": [{ "name": "pageSize", "in": "query", "schema": { "type": "integer" } }],
-        "responses": { "200": { "description": "Zoznam krajín" } }
+        "summary": "Zoznam všetkých krajín",
+        "parameters": [
+          { "name": "page", "in": "query", "schema": { "type": "integer", "default": 1 } },
+          { "name": "pageSize", "in": "query", "schema": { "type": "integer", "default": 10 } }
+        ],
+        "responses": { 
+          "200": { 
+            "description": "Zoznam krajín",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "items": { "type": "array", "items": { "$ref": "#/components/schemas/Country" } },
+                    "pagination": { "$ref": "#/components/schemas/Pagination" }
+                  }
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/api/createCountry": {
       "post": {
         "tags": ["Countries"],
+        "summary": "Vytvoriť novú krajinu",
         "requestBody": {
-          "content": { "application/json": { "schema": { "type": "object", "properties": { "name": { "type": "string" }, "code": { "type": "string" } } } } }
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CountryInput" } } }
+        },
+        "responses": { 
+          "201": { "description": "Vytvorené" },
+          "409": { "description": "Krajina už existuje" }
+        }
+      }
+    },
+    "/api/countries/{id}": {
+      "get": {
+        "tags": ["Countries"],
+        "summary": "Získať krajinu podľa ID",
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }],
+        "responses": { 
+          "200": { "description": "Detail krajiny" },
+          "404": { "description": "Krajina nenájdená" }
+        }
+      },
+      "put": {
+        "tags": ["Countries"],
+        "summary": "Aktualizovať krajinu",
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }],
+        "requestBody": {
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CountryInput" } } }
+        },
+        "responses": { "200": { "description": "Aktualizované" } }
+      },
+      "delete": {
+        "tags": ["Countries"],
+        "summary": "Zmazať krajinu",
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }],
+        "responses": { "204": { "description": "Zmazané" } }
+      }
+    },
+    "/api/allDisciplines": {
+      "get": {
+        "tags": ["Disciplines"],
+        "summary": "Zoznam všetkých disciplín",
+        "parameters": [
+          { "name": "page", "in": "query", "schema": { "type": "integer", "default": 1 } },
+          { "name": "pageSize", "in": "query", "schema": { "type": "integer", "default": 10 } }
+        ],
+        "responses": { 
+          "200": { 
+            "description": "Zoznam disciplín",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "items": { "type": "array", "items": { "$ref": "#/components/schemas/Discipline" } },
+                    "pagination": { "$ref": "#/components/schemas/Pagination" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/createDiscipline": {
+      "post": {
+        "tags": ["Disciplines"],
+        "summary": "Vytvoriť novú disciplínu",
+        "requestBody": {
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DisciplineInput" } } }
         },
         "responses": { "201": { "description": "Vytvorené" } }
+      }
+    },
+    "/api/discipline/{id}": {
+      "get": {
+        "tags": ["Disciplines"],
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }],
+        "responses": { "200": { "description": "Detail disciplíny" } }
+      },
+      "put": {
+        "tags": ["Disciplines"],
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }],
+        "requestBody": {
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DisciplineInput" } } }
+        },
+        "responses": { "200": { "description": "Aktualizované" } }
+      },
+      "delete": {
+        "tags": ["Disciplines"],
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }],
+        "responses": { "204": { "description": "Zmazané" } }
+      }
+    },
+    "/api/categories": {
+      "get": {
+        "tags": ["Disciplines"],
+        "summary": "Získať všetky kategórie (športy)",
+        "responses": { "200": { "description": "Zoznam kategórií" } }
       }
     },
     "/api/allOlympicGames": {
       "get": {
         "tags": ["Games"],
-        "responses": { "200": { "description": "Zoznam hier" } }
+        "summary": "Zoznam všetkých olympijských hier",
+        "parameters": [
+          { "name": "page", "in": "query", "schema": { "type": "integer", "default": 1 } },
+          { "name": "pageSize", "in": "query", "schema": { "type": "integer", "default": 10 } }
+        ],
+        "responses": { 
+          "200": { 
+            "description": "Zoznam hier",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "items": { "type": "array", "items": { "$ref": "#/components/schemas/Game" } },
+                    "pagination": { "$ref": "#/components/schemas/Pagination" }
+                  }
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/api/createOlympicGame": {
       "post": {
         "tags": ["Games"],
+        "summary": "Vytvoriť olympijskú hru",
         "requestBody": {
           "content": { "application/json": { "schema": { "$ref": "#/components/schemas/GameInput" } } }
         },
         "responses": { "201": { "description": "Vytvorené" } }
       }
     },
+    "/api/olympicGame/{id}": {
+      "get": {
+        "tags": ["Games"],
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }],
+        "responses": { "200": { "description": "Detail hry" } }
+      },
+      "put": {
+        "tags": ["Games"],
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }],
+        "requestBody": {
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/GameInput" } } }
+        },
+        "responses": { "200": { "description": "Aktualizované" } }
+      },
+      "delete": {
+        "tags": ["Games"],
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }],
+        "responses": { "204": { "description": "Zmazané" } }
+      }
+    },
+    "/api/years": {
+      "get": {
+        "tags": ["Games"],
+        "summary": "Získať všetky roky, v ktorých sa konali hry",
+        "responses": { "200": { "description": "Zoznam rokov" } }
+      }
+    },
     "/api/allAthleteMedals": {
       "get": {
         "tags": ["Medals"],
+        "summary": "Zoznam všetkých udelených medailí",
         "parameters": [
+          { "name": "page", "in": "query", "schema": { "type": "integer", "default": 1 } },
+          { "name": "pageSize", "in": "query", "schema": { "type": "integer", "default": 10 } },
           { "name": "type", "in": "query", "schema": { "type": "string", "enum": ["LOH", "ZOH"] } },
-          { "name": "year", "in": "query", "schema": { "type": "integer" } }
+          { "name": "year", "in": "query", "schema": { "type": "integer" } },
+          { "name": "medal_type_id", "in": "query", "schema": { "type": "integer" } },
+          { "name": "discipline_id", "in": "query", "schema": { "type": "integer" } }
         ],
-        "responses": { "200": { "description": "Zoznam medailí" } }
+        "responses": { 
+          "200": { 
+            "description": "Zoznam medailí",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "items": { "type": "array", "items": { "$ref": "#/components/schemas/AthleteMedal" } },
+                    "pagination": { "$ref": "#/components/schemas/Pagination" }
+                  }
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/api/createAthleteMedal": {
       "post": {
         "tags": ["Medals"],
+        "summary": "Priradiť medailu športovcovi",
         "requestBody": {
           "content": { "application/json": { "schema": { "$ref": "#/components/schemas/MedalInput" } } }
         },
         "responses": { "201": { "description": "Vytvorené" } }
       }
+    },
+    "/api/athleteMedal/{id}": {
+      "get": {
+        "tags": ["Medals"],
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }],
+        "responses": { "200": { "description": "Detail pridelenia medaily" } }
+      },
+      "put": {
+        "tags": ["Medals"],
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }],
+        "requestBody": {
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/MedalInput" } } }
+        },
+        "responses": { "200": { "description": "Aktualizované" } }
+      },
+      "delete": {
+        "tags": ["Medals"],
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }],
+        "responses": { "204": { "description": "Zmazané" } }
+      }
     }
   },
   "components": {
     "schemas": {
-      "AthleteInput": {
+      "Pagination": {
         "type": "object",
-        "required": ["firstName", "lastName"],
         "properties": {
+          "totalItems": { "type": "integer" },
+          "page": { "type": "integer" },
+          "pageSize": { "type": "integer" },
+          "totalPages": { "type": "integer" }
+        }
+      },
+      "Athlete": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer" },
           "firstName": { "type": "string" },
           "lastName": { "type": "string" },
           "birthDate": { "type": "string", "format": "date" },
@@ -135,14 +429,115 @@
           "deathCountryId": { "type": "integer" }
         }
       },
+      "AthleteListItem": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer" },
+          "firstName": { "type": "string" },
+          "lastName": { "type": "string" },
+          "year": { "type": "integer" },
+          "country": { "type": "string" },
+          "sportName": { "type": "string" }
+        }
+      },
+      "AthleteDetail": {
+        "allOf": [
+          { "$ref": "#/components/schemas/Athlete" },
+          {
+            "type": "object",
+            "properties": {
+              "participations": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "game_year": { "type": "integer" },
+                    "game_city": { "type": "string" },
+                    "game_type": { "type": "string" },
+                    "discipline_name": { "type": "string" },
+                    "medal_type": { "type": "string" }
+                  }
+                }
+              }
+            }
+          }
+        ]
+      },
+      "AthleteInput": {
+        "type": "object",
+        "required": ["firstName", "lastName"],
+        "properties": {
+          "firstName": { "type": "string" },
+          "lastName": { "type": "string" },
+          "birthDate": { "type": "string", "format": "date", "nullable": true },
+          "birthPlace": { "type": "string", "nullable": true },
+          "birthCountryId": { "type": "integer", "nullable": true },
+          "deathDate": { "type": "string", "format": "date", "nullable": true },
+          "deathPlace": { "type": "string", "nullable": true },
+          "deathCountryId": { "type": "integer", "nullable": true }
+        }
+      },
+      "Country": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer" },
+          "name": { "type": "string" },
+          "code": { "type": "string" }
+        }
+      },
+      "CountryInput": {
+        "type": "object",
+        "required": ["name", "code"],
+        "properties": {
+          "name": { "type": "string" },
+          "code": { "type": "string" }
+        }
+      },
+      "Discipline": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer" },
+          "name": { "type": "string" },
+          "code": { "type": "string", "description": "This is actually the category field" }
+        }
+      },
+      "DisciplineInput": {
+        "type": "object",
+        "required": ["name", "category"],
+        "properties": {
+          "name": { "type": "string" },
+          "category": { "type": "string" }
+        }
+      },
+      "Game": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer" },
+          "year": { "type": "integer" },
+          "type": { "type": "string" },
+          "city": { "type": "string" },
+          "countryName": { "type": "string" }
+        }
+      },
       "GameInput": {
         "type": "object",
-        "required": ["year", "type", "city", "countryId"],
+        "required": ["year", "type", "city"],
         "properties": {
           "year": { "type": "integer" },
           "type": { "type": "string", "enum": ["LOH", "ZOH"] },
           "city": { "type": "string" },
-          "countryId": { "type": "integer" }
+          "countryId": { "type": "integer" },
+          "countryName": { "type": "string" }
+        }
+      },
+      "AthleteMedal": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer" },
+          "athleteId": { "type": "integer" },
+          "gameId": { "type": "integer" },
+          "disciplineId": { "type": "integer" },
+          "medalId": { "type": "integer" }
         }
       },
       "MedalInput": {
